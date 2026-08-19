@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamAlign: Streaming Text-Aligned Speech Tokenization — Audio Samples</title>
+  <meta name="description" content="Audio samples for StreamAlign: Streaming Text-Aligned Speech Tokenization. Speech reconstruction and speech continuation comparisons.">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-3 publication-title">
+            StreamAlign: Streaming Text-Aligned Speech Tokenization
+          </h1>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================= -->
+<!-- Speech Reconstruction                                          -->
+<!-- ============================================================= -->
+<section class="section">
+  <div class="container is-fullhd">
+    <h2 class="title is-5 has-text-centered section-title">Speech Reconstruction</h2>
+    <div class="audio-table-wrapper">
+      <table class="audio-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="sticky-col sample-col">Sample</th>
+            <th rowspan="2">Ground Truth</th>
+            <th colspan="1" class="group-ours">Streaming, text-aligned</th>
+            <th colspan="2" class="group-non-streaming">Non-streaming</th>
+            <th colspan="3" class="group-streaming">Streaming</th>
+            <th colspan="2" class="group-text-informed">Text-informed</th>
+          </tr>
+          <tr>
+            <th class="group-ours">StreamAlign (Ours)</th>
+            <th class="group-non-streaming">SpeechTokenizer</th>
+            <th class="group-non-streaming">WavTokenizer</th>
+            <th class="group-streaming">Mimi</th>
+            <th class="group-streaming">MagiCodec</th>
+            <th class="group-streaming">Qwen3-TTS</th>
+            <th class="group-text-informed">TASTE</th>
+            <th class="group-text-informed">TaDiCodec</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Sample 1 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 1</div>
+              <div class="sample-text">Three seconds before the arrival of J. B. Hobson's letter, I no more dreamed of chasing the unicorn than of trying for the Northwest Passage.</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_ground_truth.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_streamalign.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_speechtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_wavtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_mimi.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_magicodec.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_qwen3tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_taste.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_01_tadicodec.wav"></audio></td>
+          </tr>
+
+          <!-- Sample 2 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 2</div>
+              <div class="sample-text">What do you mean? inquired Louis.</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_ground_truth.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_streamalign.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_speechtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_wavtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_mimi.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_magicodec.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_qwen3tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_taste.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_02_tadicodec.wav"></audio></td>
+          </tr>
+
+          <!-- Sample 3 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 3</div>
+              <div class="sample-text">Don't I though, I'm so sorry to hear it, how did her son turn out?</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_ground_truth.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_streamalign.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_speechtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_wavtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_mimi.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_magicodec.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_qwen3tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_taste.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_03_tadicodec.wav"></audio></td>
+          </tr>
+
+          <!-- Sample 4 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 4</div>
+              <div class="sample-text">I have a letter here, Mister Soames, which I wrote to you early this morning in the middle of a restless night.</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_ground_truth.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_streamalign.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_speechtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_wavtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_mimi.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_magicodec.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_qwen3tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_taste.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_04_tadicodec.wav"></audio></td>
+          </tr>
+
+          <!-- Sample 5 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 5</div>
+              <div class="sample-text">Oh my Lord, cried Miss Woodley with a most forcible accent, you are the last person on earth she would pardon me for entrusting.</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_ground_truth.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_streamalign.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_speechtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_wavtokenizer.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_mimi.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_magicodec.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_qwen3tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_taste.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/reconstruction/sample_05_tadicodec.wav"></audio></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================= -->
+<!-- Speech Continuation                                            -->
+<!-- ============================================================= -->
+<section class="section">
+  <div class="container is-fullhd">
+    <h2 class="title is-5 has-text-centered section-title">Speech Continuation</h2>
+    <div class="audio-table-wrapper">
+      <table class="audio-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="sticky-col sample-col">Sample</th>
+            <th rowspan="2">Prompt</th>
+            <th rowspan="2" class="group-ours">StreamAlign-SLM (Ours)<br><span class="model-meta">Llama-3.2 1B</span></th>
+            <th rowspan="2" class="group-topline">ASR + LLM + TTS<br><span class="model-meta">Llama-3.2 1B</span></th>
+            <th colspan="5" class="group-baseline">Spoken Language Model Baselines</th>
+          </tr>
+          <tr>
+            <th class="group-baseline">TWIST<br><span class="model-meta">OPT 1.3B</span></th>
+            <th class="group-baseline">TWIST<br><span class="model-meta">Llama 7B</span></th>
+            <th class="group-baseline">SpiRit-LM<br><span class="model-meta">Llama-2 7B</span></th>
+            <th class="group-baseline">SpiRit-LM (expr.)<br><span class="model-meta">Llama-2 7B</span></th>
+            <th class="group-baseline">TASLM<br><span class="model-meta">Llama-3.2 1B</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Sample 1 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 1</div>
+              <div class="sample-text">&ldquo;there is no enchantment nor charm there&rdquo;</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_01_prompt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_01_streamalign_slm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_01_asr_llm_tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_01_twist_opt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_01_twist_llama.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_01_spiritlm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_01_spiritlm_expr.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_01_taslm.wav"></audio></td>
+          </tr>
+
+          <!-- Sample 2 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 2</div>
+              <div class="sample-text">&ldquo;Did you ever have such a lordly guest before?&rdquo;</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_02_prompt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_02_streamalign_slm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_02_asr_llm_tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_02_twist_opt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_02_twist_llama.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_02_spiritlm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_02_spiritlm_expr.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_02_taslm.wav"></audio></td>
+          </tr>
+
+          <!-- Sample 3 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 3</div>
+              <div class="sample-text">&ldquo;you stick to that said beer radiant with delight&rdquo;</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_03_prompt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_03_streamalign_slm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_03_asr_llm_tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_03_twist_opt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_03_twist_llama.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_03_spiritlm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_03_spiritlm_expr.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_03_taslm.wav"></audio></td>
+          </tr>
+
+          <!-- Sample 4 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 4</div>
+              <div class="sample-text">&ldquo;I do not know.&rdquo;</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_04_prompt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_04_streamalign_slm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_04_asr_llm_tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_04_twist_opt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_04_twist_llama.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_04_spiritlm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_04_spiritlm_expr.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_04_taslm.wav"></audio></td>
+          </tr>
+
+          <!-- Sample 5 -->
+          <tr>
+            <td class="sticky-col sample-col">
+              <div class="sample-label">Sample 5</div>
+              <div class="sample-text">&ldquo;She gathered up her reins.&rdquo;</div>
+            </td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_05_prompt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_05_streamalign_slm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_05_asr_llm_tts.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_05_twist_opt.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_05_twist_llama.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_05_spiritlm.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_05_spiritlm_expr.wav"></audio></td>
+            <td><audio controls preload="none" src="static/audio/continuation/sample_05_taslm.wav"></audio></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container has-text-centered">
+    <p class="is-size-7 has-text-grey">
+      This page is anonymized for review.
+    </p>
+  </div>
+</footer>
+
+<script src="static/js/player.js"></script>
+</body>
+</html>

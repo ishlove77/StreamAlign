@@ -1,0 +1,16 @@
+[project]
+name = "continuation-eval"
+version = "0.1.0"
+description = "Standalone UTMOS / SECS / GPT-4o eval for StreamSLM speech-continuation outputs."
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "numpy<2",
+    "torch==2.2.2",
+    "torchaudio==2.2.2",
+    "librosa>=0.10.1",
+    "soundfile>=0.12.1",
+    "espnet>=202402",
+    "espnet_model_zoo>=0.1.7",
+    "openai>=1.30",
+    "tqdm>=4.66",
+]

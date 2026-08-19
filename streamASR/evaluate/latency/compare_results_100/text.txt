@@ -1,0 +1,169 @@
+Transcription differences: flag=False vs flag=True
+Total files with differences: 33
+=================================================================
+
+FILE: 1089-134686-0005.wav
+  REF      : the music came nearer and he recalled the words the words of shelley's fragment upon the moon wandering companionless pale for weariness
+  flag=False: the music came near and he recalled the words the words of shelley's fragment upon the moon wandering companionless pale for weariness
+  flag=True : the music came near and he recalled the words the words of shelley's fragment upon the moon wandering companion pale for weariness
+
+FILE: 1089-134686-0011.wav
+  REF      : on saturday mornings when the sodality met in the chapel to recite the little office his place was a cushioned kneeling desk at the right of the altar from which he led his wing of boys through the responses
+  flag=False: on saturday morning when the sodality met in the chapel to recite the little office his place was a cushion kneeling desk at the right of the altar from which he led his wing of boys through the responses
+  flag=True : on saturday morning when the sodality met in the chapel to recite the little office his place was a cushion kneeling desk at the right of the altar from which he led his wing of boys through the respon
+
+FILE: 1089-134686-0012.wav
+  REF      : her eyes seemed to regard him with mild pity her holiness a strange light glowing faintly upon her frail flesh did not humiliate the sinner who approached her
+  flag=False: her eyes seemed to regard him with mild pity her holiness a strange light glowing faintly upon her frail flesh did not humiliate the sinner who approached her
+  flag=True : her eyes seemed to regard him with mild pity her holiness a strange light glowing faintly upon her frail flesh did not humil the sinner who approached her
+
+FILE: 1089-134686-0016.wav
+  REF      : then you can ask him questions on the catechism dedalus
+  flag=False: then you can ask him questions on the catechism daedalus
+  flag=True : then you can ask him question on the catechism daedalus
+
+FILE: 1089-134686-0018.wav
+  REF      : it was strange too that he found an arid pleasure in following up to the end the rigid lines of the doctrines of the church and penetrating into obscure silences only to hear and feel the more deeply his own condemnation
+  flag=False: it was strange too that he found an arid pleasure in following up to the end the rigid lines of the doctrine of the church and penetrating into obscure silences only to hear and feel the more deeply his own condemnation
+  flag=True : it was strange too that he found an arid pleasure in following up to the end the rigid lines of the doctrine of the church and penetra into obscur silences only to hear and feel the more deeply his own condemnation
+
+FILE: 1089-134686-0023.wav
+  REF      : why was the sacrament of the eucharist instituted under the two species of bread and wine if jesus christ be present body and blood soul and divinity in the bread alone and in the wine alone
+  flag=False: why was the sacrament of the eucharist instituted under the two species of bread and wine if jesus christ be present body and blood so and divinity in the bread alone and in the wine alone
+  flag=True : why was the sacrament of the eucharist institu under the two species of bread and wine if jesus christ be present body and blood so and divinity in the bread alone and in the wine alone
+
+FILE: 1089-134686-0036.wav
+  REF      : a great saint saint francis xavier
+  flag=False: a great saint saint francis zaviour
+  flag=True : a great saint saint franc zaviour
+
+FILE: 1089-134691-0002.wav
+  REF      : he set off abruptly for the bull walking rapidly lest his father's shrill whistle might call him back and in a few moments he had rounded the curve at the police barrack and was safe
+  flag=False: he set off abruptly for the bull walking rapidly lest his father shrill whistle might call him back and in a few moments he had rounded the curve at the police barrack and was safe
+  flag=True : he set off abruptly for the bull walking rapidly lest his father shrill whist might call him back and in a few moments he had rounded the curve at the police barrack and was safe
+
+FILE: 1089-134691-0003.wav
+  REF      : the university
+  flag=False: the university
+  flag=True : the univer
+
+FILE: 1089-134691-0006.wav
+  REF      : the pride of that dim image brought back to his mind the dignity of the office he had refused
+  flag=False: the pride of that dim image brought back to his mind the dignity of the office he had refused
+  flag=True : the pride of that dim image brought back to his mind the dign of the office he had refused
+
+FILE: 1089-134691-0009.wav
+  REF      : angry with himself he tried to hide his face from their eyes by gazing down sideways into the shallow swirling water under the bridge but he still saw a reflection therein of their top heavy silk hats and humble tape like collars and loosely hanging clerical clothes brother hickey
+  flag=False: angry with himself he tried to hide his face from their eyes by gazing down sideways into the shallow swirling water under the bridge but he still saw a reflection therein of their top heavy silk hats and humble tape like collars and loosely hanging clerical clothes brother hickie
+  flag=True : angry with himself he tried to hide his face from their eyes by gazing down sideways into the shallow swirling water under the bridge but he still saw a reflection therein of their top heavy silk hats and hum tape like collars and loosely hanging clerical clothes brother hickie
+
+FILE: 1089-134691-0014.wav
+  REF      : the phrase and the day and the scene harmonized in a chord
+  flag=False: the phrase and the day and the scene harmonised in a
+  flag=True : the phrase and the day and the scene harmon in a
+
+FILE: 1089-134691-0017.wav
+  REF      : the europe they had come from lay out there beyond the irish sea europe of strange tongues and valleyed and woodbegirt and citadelled and of entrenched and marshalled races
+  flag=False: the europe they had come from lay out there beyond the irish sea europe of strange tongues and valley and wood be girt and citadel and of entrenched and martialed races
+  flag=True : the europe they had come from lay out there beyond the irish sea europe of strange tongues and valley and wood be girt and citadel and of entrenched and mar races
+
+FILE: 1089-134691-0022.wav
+  REF      : he stood still in deference to their calls and parried their banter with easy words
+  flag=False: he stood still in deference to their calls and parried their banter with easy words
+  flag=True : he stood still in deference to their calls and parried their banter with eas words
+
+FILE: 1089-134691-0024.wav
+  REF      : stephanos dedalos
+  flag=False: stephano stadlost
+  flag=True : stephan stadlost
+
+FILE: 1089-134691-0025.wav
+  REF      : a moment before the ghost of the ancient kingdom of the danes had looked forth through the vesture of the hazewrapped city
+  flag=False: a moment before the ghost of the ancient kingdom of the danes had looked forth through the vesti of the haz wrapped city
+  flag=True : a moment before the ghost of the ancient kingdom of the danes had looked forth through the vest of the haz wrapped city
+
+FILE: 1188-133604-0000.wav
+  REF      : you will find me continually speaking of four men titian holbein turner and tintoret in almost the same terms
+  flag=False: you will find me continually speaking of four men titian hobine turner and tinkaret in almost the same term
+  flag=True : you will find me continu speaking of four men titian ho turner and tinkaret in almost the same term
+
+FILE: 1188-133604-0001.wav
+  REF      : they unite every quality and sometimes you will find me referring to them as colorists sometimes as chiaroscurists
+  flag=False: the unit every quality and sometimes you will find me referring to them as colorists sometimes as chiar o skeurus
+  flag=True : the unit every quality and sometimes you will find me referring to them as color sometimes as chiar o skeurus
+
+FILE: 1188-133604-0002.wav
+  REF      : by being studious of color they are studious of division and while the chiaroscurist devotes himself to the representation of degrees of force in one thing unseparated light the colorists have for their function the attainment of beauty by arrangement of the divisions of light
+  flag=False: by being studious of color they are studious of division and while the curo devotes himself to the representation of degrees of force in one thing on separated light the colorists have for their function the attainment of beauty by arrangement of the divisions of light
+  flag=True : by being studious of color they are studious of division and while the curo devotes himself to the represent of degrees of force in one thing on separated light the colorists have for their function the attainment of beauty by arrangement of the divis of light
+
+FILE: 1188-133604-0003.wav
+  REF      : my first and principal reason was that they enforced beyond all resistance on any student who might attempt to copy them this method of laying portions of distinct hue side by side
+  flag=False: my first and principal reason was that they enforced beyond all resistance on any student who might attempt a copy them this method of laying portions of distinct hue side by side
+  flag=True : my first and princip reason was that they enforced beyond all resist on any student who might attempt a copy them this method of laying portions of distinct hue side by side
+
+FILE: 1188-133604-0005.wav
+  REF      : it is the head of a parrot with a little flower in his beak from a picture of carpaccio's one of his series of the life of saint george
+  flag=False: does the head of a parrot with a little flower in his beak from a picture of carpatias one of his series of the life of saint george
+  flag=True : does the head of a parrot with a little flower in his beak from a picture of carpatia one of his series of the life of saint george
+
+FILE: 1188-133604-0008.wav
+  REF      : for believe me the final philosophy of art can only ratify their opinion that the beauty of a cock robin is to be red and of a grass plot to be green and the best skill of art is in instantly seizing on the manifold deliciousness of light which you can only seize by precision of instantaneous touch
+  flag=False: for believe me the final philosophy of art can only ratify their opinion that the beauty of a cock robin is to be read and of a grass plot to be green and the best skill of art is an inly seizing on the manifold delicious of light which you can only see is by precision of instantaneous touch
+  flag=True : for believe me the final philosoph of art can only ratify their opinion that the beauty of a cock robin is to be read and of a grass plot to be green and the best skill of art is an inly seizing on the manifold delicious of light which you can only see is by precis of instantaneous touch
+
+FILE: 1188-133604-0011.wav
+  REF      : they are beyond all other works that i know existing dependent for their effect on low subdued tones their favorite choice in time of day being either dawn or twilight and even their brightest sunsets produced chiefly out of gray paper
+  flag=False: they are beyond all other works than i know existing dependent for their effect on low subdued tones their favorite choice in time of day being either dawn or twilight and even their brightest sunset produced chiefly out of gray paper
+  flag=True : they are beyond all other works than i know existing dependent for their effect on low subdued tones their favorite choic in time of day being either dawn or twilight and even their bright sun produc chiefly out of gray paper
+
+FILE: 1188-133604-0014.wav
+  REF      : do not therefore think that the gothic school is an easy one
+  flag=False: do not therefore think that the gothic schools in easy one
+  flag=True : do not therefore think that the gothic school in easy one
+
+FILE: 1188-133604-0015.wav
+  REF      : the law of that school is that everything shall be seen clearly or at least only in such mist or faintness as shall be delightful and i have no doubt that the best introduction to it would be the elementary practice of painting every study on a golden ground
+  flag=False: the law of that school that everything shall be seen clearly or at least only in such mist or faintness as shall be delightful and i have no doubt that the best introduction to it would be the element practice of painting every study on a golden ground
+  flag=True : the law of that school that everything shall be seen clearly or at least only in such mist or faintness as shall be delightful and i have no doubt that the best introduction to it would be the element practice of painting every study on a gold ground
+
+FILE: 1188-133604-0016.wav
+  REF      : this at once compels you to understand that the work is to be imaginative and decorative that it represents beautiful things in the clearest way but not under existing conditions and that in fact you are producing jeweler's work rather than pictures
+  flag=False: this at once compels you to understand that the work is to be imaginative and decorative that it represents beautiful thing in the clearest way but not under existing conditions and that in fact you are producing jewelers work rather than pictures
+  flag=True : this at once compels you to understand that the work is to be imagin and decorative that it represent beautiful thing in the clearest way but not under existing condition and that in fact you are producing jewelers work rather than pictures
+
+FILE: 1188-133604-0018.wav
+  REF      : in all early gothic art indeed you will find failure of this kind especially distortion and rigidity which are in many respects painfully to be compared with the splendid repose of classic art
+  flag=False: in all early gothic art indeed you will find failure of this kind especially distortion and rigidity which are in many respects painfully to be compared with the splendid repose of classic art
+  flag=True : in all early gothic art indeed you will find failure of this kind especially distortion and rigid which are in many respects painfully to be compared with the splendid repose of classic art
+
+FILE: 1188-133604-0019.wav
+  REF      : the large letter contains indeed entirely feeble and ill drawn figures that is merely childish and failing work of an inferior hand it is not characteristic of gothic or any other school
+  flag=False: the large letter contains indeed entire feeble and ill drawn figures that is merely childish and failing work of an inferior hand it is not characteristic of gothic or any other school
+  flag=True : the large letter contains indeed entire feeble and ill drawn figure that is merely childish and failing work of an inferior hand it is not characteristic of gothic or any other school
+
+FILE: 1188-133604-0020.wav
+  REF      : but observe you can only do this on one condition that of striving also to create in reality the beauty which you seek in imagination
+  flag=False: but observe you can only do this on one condition that of striving also to create in reality the beauty which you see in imagination
+  flag=True : but observ you can only do this on one condition that of striving also to create in real the beauty which you see in imagination
+
+FILE: 1188-133604-0021.wav
+  REF      : it will be wholly impossible for you to retain the tranquillity of temper and felicity of faith necessary for noble purist painting unless you are actively engaged in promoting the felicity and peace of practical life
+  flag=False: it will be wholly impossible for you to retain the tranquillity of temper and felicity of faith necessary for noble purest painting unless you are actively engaged in promoting the felicity and peace of practical life
+  flag=True : it will be wholly impossible for you to retain the tranquillity of temper and felicity of faith necessar for noble purest painting unless you are actively engaged in promoting the felicity and peace of practical life
+
+FILE: 1188-133604-0023.wav
+  REF      : the colorist says first of all as my delicious paroquet was ruby so this nasty viper shall be black and then is the question can i round him off even though he is black and make him slimy and yet springy and close down clotted like a pool of black blood on the earth all the same
+  flag=False: the cholerast says first of all as my delicious paroquet was ruby so this nasty viper shall be black and then as the question can i round him off even though he is black and make him slimy me and yet springy and close down clotted like a pool of black blood on the earth all the same
+  flag=True : the cholerast says first of all as my delicious paroquet was ruby so this nasty viper shall be black and then as the question can i round him off even though he is black and make him slimy me and yet spring and close down clotted like a pool of black blood on the earth all the same
+
+FILE: 1188-133604-0033.wav
+  REF      : every plant in the grass is set formally grows perfectly and may be realized completely
+  flag=False: every plant in the grasse is set formally grows perfectly and may be realized completely
+  flag=True : every plant in the grasse is set formally grows perfectly and may be realiz completely
+
+FILE: 1188-133604-0034.wav
+  REF      : exquisite order and universal with eternal life and light this is the faith and effort of the schools of crystal and you may describe and complete their work quite literally by taking any verses of chaucer in his tender mood and observing how he insists on the clearness and brightness first and then on the order
+  flag=False: exquisite order and universal with eternal life and light this is the faith in effort of the schools of cristel and you may describe and complete their work quite literally by taking any verses of chaucer and his tender mood and observing how he insists on the clearness and brightness first and then on the order
+  flag=True : exquisite order and univer with eternal life and light this is the faith in effort of the schools of cristel and you may descri and complete their work quite literally by taking any verses of chaucer and his tender mood and observ how he insists on the clear and brightness first and then on the order
+

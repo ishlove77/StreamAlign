@@ -1,0 +1,368 @@
+# Generated 2026-02-02 from:
+# /home/streamalign/streamASR/hparams/train_chunk_streaming.yaml
+# yamllint disable
+# ############################################################################
+# Model: E2E ASR with Conformer Transducer (Character-level)
+# Encoder: Conformer with Dynamic Chunk Training
+# Decoder: LSTM + greedy/beam search
+# Tokens: Character-level (no BPE)
+# Losses: Transducer + CTC (optional)
+# Training: Librispeech
+# 
+# Modified for character-level prediction and CER evaluation
+# ############################################################################
+
+seed: 3407
+__set_seed: !apply:speechbrain.utils.seed_everything [3407]
+output_folder: results/conformer_transducer_char/alignment
+output_wer_folder: results/conformer_transducer_char/alignment/
+save_folder: results/conformer_transducer_char/alignment/save
+train_log: results/conformer_transducer_char/alignment/train_log.txt
+
+# Data files
+data_folder: /home/datasets/LibriTTS
+
+# Files to hold the manifest data
+train_json: !ref <save_folder>/train.json
+valid_json: !ref <save_folder>/valid.json
+test_json: !ref <save_folder>/test.json
+
+# Data splits
+train_split: ["train-clean-100", "train-clean-360", "train-other-500"]
+valid_split: ["dev-clean", "dev-other"]
+test_split: ["test-clean", "test-other"]
+
+skip_prep: false
+ckpt_interval_minutes: 5
+####################### Training Parameters ####################################
+
+number_of_epochs: 100
+warmup_steps: 25000
+num_workers: 4
+batch_size_valid: 4
+lr: 0.0008
+weight_decay: 0.01
+number_of_ctc_epochs: 60
+ctc_weight: 0.3
+ce_weight: 0.0
+max_grad_norm: 5.0
+loss_reduction: batchmean
+precision: fp16
+
+batch_size: 8
+grad_accumulation_factor: 4
+sorting: random
+avg_checkpoints: 10
+
+# Feature parameters
+sample_rate: 16000
+n_fft: 512
+n_mels: 80
+win_length: 32
+
+# ============================================================================
+# Streaming & Dynamic Chunk Training
+# ============================================================================
+streaming: true
+
+dynchunktrain_config_sampler: !new:speechbrain.utils.dynamic_chunk_training.DynChunkTrainConfigRandomSampler
+  chunkwise_prob: 0.6
+  chunk_size_min: 8
+  chunk_size_max: 32
+  limited_left_context_prob: 0.75
+  left_context_chunks_min: 2
+  left_context_chunks_max: 32
+   # Validation uses same streaming config as test
+  valid_config: !new:speechbrain.utils.dynamic_chunk_training.DynChunkTrainConfig
+    chunk_size: 16
+    left_context_size: 8
+   # Test config with specific streaming parameters
+  test_config: !new:speechbrain.utils.dynamic_chunk_training.DynChunkTrainConfig
+    chunk_size: 16
+    left_context_size: 8
+
+# Dataloader options
+train_dataloader_opts:
+  batch_size: 8
+  num_workers: 4
+
+valid_dataloader_opts:
+  batch_size: 4
+
+test_dataloader_opts:
+  batch_size: 4
+
+# Dynamic batching
+dynamic_batching: true
+max_batch_len: 150
+max_batch_len_val: 50
+num_bucket: 200
+
+dynamic_batch_sampler:
+  max_batch_len: 150
+  max_batch_len_val: 50
+  num_buckets: 200
+  shuffle_ex: true
+  batch_ordering: random
+  max_batch_ex: 256
+
+####################### Model Parameters #######################################
+
+# Transformer/Conformer
+d_model: 512
+joint_dim: 640
+nhead: 8
+num_encoder_layers: 12
+num_decoder_layers: 0
+d_ffn: 2048
+transformer_dropout: 0.1
+activation: &id005 !name:torch.nn.GELU
+
+
+# ============================================================================
+# Character-level output
+# 72 characters + blank = 73 tokens (CTC_VOCAB_SIZE)
+# space/punct/a-z/accented (0-71) + blank (72)
+# ============================================================================
+output_neurons: 73
+
+# Decoder
+dec_dim: 512
+dec_emb_dropout: 0.2
+dec_dropout: 0.1
+attention_type: RelPosMHAXL
+
+# Decoding parameters
+blank_index: 72
+bos_index: 72
+eos_index: 72
+pad_index: 72
+beam_size: 10
+nbest: 1
+state_beam: 2.3
+expand_beam: 2.3
+
+# If True uses torchaudio loss
+use_torchaudio: false
+
+epoch_counter: &id019 !new:speechbrain.utils.epoch_loop.EpochCounter
+
+  limit: 100
+
+normalize: &id013 !new:speechbrain.processing.features.InputNormalization
+  norm_type: global
+  update_until_epoch: 4
+
+compute_features: &id021 !new:speechbrain.lobes.features.Fbank
+  sample_rate: 16000
+  n_fft: 512
+  n_mels: 80
+  win_length: 32
+
+############################## Augmentations ###################################
+
+speed_perturb: &id001 !new:speechbrain.augment.time_domain.SpeedPerturb
+  orig_freq: 16000
+  speeds: [95, 100, 105]
+
+wav_augment: !new:speechbrain.augment.augmenter.Augmenter
+  min_augmentations: 1
+  max_augmentations: 1
+  augment_prob: 1.0
+  augmentations: [*id001]
+
+time_drop: &id002 !new:speechbrain.augment.freq_domain.SpectrogramDrop
+  drop_length_low: 12
+  drop_length_high: 20
+  drop_count_low: 5
+  drop_count_high: 5
+  replace: zeros
+
+freq_drop: &id003 !new:speechbrain.augment.freq_domain.SpectrogramDrop
+  drop_length_low: 20
+  drop_length_high: 25
+  drop_count_low: 2
+  drop_count_high: 2
+  replace: zeros
+  dim: 2
+
+time_warp: &id004 !new:speechbrain.augment.freq_domain.Warping
+
+fea_augment: !new:speechbrain.augment.augmenter.Augmenter
+  parallel_augment: false
+  concat_original: false
+  repeat_augment: 1
+  shuffle_augmentations: false
+  min_augmentations: 3
+  max_augmentations: 3
+  augment_prob: 1.0
+  augmentations: [*id002, *id003, *id004]
+
+############################## Pretrained ###################################
+pretrained_source: speechbrain/asr-streaming-conformer-librispeech
+pretrained_save: results/conformer_transducer_char/alignment/pretrained
+
+
+############################## Models ##########################################
+
+CNN: &id007 !new:speechbrain.lobes.models.convolution.ConvolutionFrontEnd
+  input_shape: (8, 10, 80)
+  num_blocks: 2
+  num_layers_per_block: 1
+  out_channels: (64, 32)
+  kernel_sizes: (3, 3)
+  strides: (2, 2)
+  residuals: (False, False)
+
+Transformer: &id006 !new:models.TransformerASR.TransformerASR
+
+  input_size: 640
+  tgt_vocab: 73
+  d_model: 512
+  nhead: 8
+  num_encoder_layers: 12
+  num_decoder_layers: 0
+  d_ffn: 2048
+  dropout: 0.1
+  activation: *id005
+  encoder_module: conformer
+  attention_type: RelPosMHAXL
+  normalize_before: true
+  output_hidden_states: true
+  causal: false
+
+enc: &id008 !new:models.TransformerASR.EncoderWrapper
+  transformer: *id006
+proj_ctc: &id014 !new:speechbrain.nnet.linear.Linear
+  input_size: 640
+  n_neurons: 73
+
+proj_enc: &id016 !new:speechbrain.nnet.linear.Linear
+
+  input_size: 512
+  n_neurons: 640
+  bias: false
+
+proj_dec: &id015 !new:speechbrain.nnet.linear.Linear
+  input_size: 512
+  n_neurons: 640
+  bias: false
+
+ctc_cost: !name:speechbrain.nnet.losses.ctc_loss
+  blank_index: 72
+  reduction: batchmean
+
+# Character embedding (output_neurons - 1 because blank is handled separately)
+emb: &id009 !new:speechbrain.nnet.embedding.Embedding
+  num_embeddings: 73
+  consider_as_one_hot: true
+  blank_id: 72
+
+dec: &id010 !new:speechbrain.nnet.RNN.LSTM
+  input_shape: [null, null, 72]
+  hidden_size: 512
+  num_layers: 1
+  re_init: true
+
+ce_cost: !name:speechbrain.nnet.losses.nll_loss
+  label_smoothing: 0.1
+
+Tjoint: &id011 !new:speechbrain.nnet.transducer.transducer_joint.Transducer_joint
+  joint: sum
+  nonlinearity: *id005
+transducer_lin: &id012 !new:speechbrain.nnet.linear.Linear
+  input_size: 640
+  n_neurons: 73
+  bias: false
+
+log_softmax: !new:speechbrain.nnet.activations.Softmax
+  apply_log: true
+
+transducer_cost: !name:speechbrain.nnet.losses.transducer_loss
+  blank_index: 72
+  use_torchaudio: false
+
+modules:
+  CNN: *id007
+  enc: *id008
+  emb: *id009
+  dec: *id010
+  Tjoint: *id011
+  transducer_lin: *id012
+  normalize: *id013
+  proj_ctc: *id014
+  proj_dec: *id015
+  proj_enc: *id016
+model: &id017 !new:torch.nn.ModuleList
+- [*id007, *id008, *id009, *id010, *id016, *id015, *id014, *id012]
+Greedysearcher: &id020 !new:speechbrain.decoders.transducer.TransducerBeamSearcher
+  decode_network_lst: [*id009, *id010, *id015]
+  tjoint: *id011
+  classifier_network: [*id012]
+  blank_id: 72
+  beam_size: 1
+  nbest: 1
+
+Beamsearcher: !new:speechbrain.decoders.transducer.TransducerBeamSearcher
+  decode_network_lst: [*id009, *id010, *id015]
+  tjoint: *id011
+  classifier_network: [*id012]
+  blank_id: 72
+  beam_size: 10
+  nbest: 1
+  state_beam: 2.3
+  expand_beam: 2.3
+
+opt_class: !name:torch.optim.AdamW
+  lr: 0.0008
+  betas: (0.9, 0.98)
+  eps: 1.e-8
+  weight_decay: 0.01
+
+noam_annealing: &id018 !new:speechbrain.nnet.schedulers.NoamScheduler
+  lr_initial: 0.0008
+  n_warmup_steps: 25000
+
+
+############################## Logging and Checkpointing #######################
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+  checkpoints_dir: results/conformer_transducer_char/alignment/save
+  recoverables:
+    model: *id017
+    scheduler: *id018
+    normalizer: *id013
+    counter: *id019
+train_logger: !new:speechbrain.utils.train_logger.WandBLogger
+  initializer: !name:wandb.init
+    project: streamingAlign
+    name: subalign
+    dir: results/conformer_transducer_char/alignment/wandb
+    reinit: true
+    resume: false
+
+# CER computer (character-level)
+cer_computer: !name:speechbrain.utils.metric_stats.ErrorRateStats
+  split_tokens: true
+
+############################## Streaming Inference #############################
+
+# Streaming configuration for inference
+# chunk_size: frames per chunk (8 frames ≈ 320ms after 4x subsampling)
+# left_context_size: number of left context chunks
+streaming_chunk_size: 16
+streaming_left_context: 8
+
+# Create streaming context for the decoder
+make_decoder_streaming_context: !name:speechbrain.decoders.transducer.TransducerGreedySearcherStreamingContext
+
+# Streaming decoding function
+decoding_function: !name:speechbrain.decoders.transducer.TransducerBeamSearcher.transducer_greedy_decode_streaming
+- *id020
+fea_streaming_extractor: !new:speechbrain.lobes.features.StreamingFeatureWrapper
+  module: !new:speechbrain.nnet.containers.LengthsCapableSequential
+  - *id021
+  - *id013
+  - *id007
+  properties: !apply:speechbrain.utils.filter_analysis.stack_filter_properties
+  - [*id021, *id007]

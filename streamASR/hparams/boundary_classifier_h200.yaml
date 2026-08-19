@@ -1,0 +1,80 @@
+# ############################################################################
+# BoundaryClassifier – hyperparameters
+#
+# Purpose : Train a Joiner-style binary classifier (see models/boundary_classifier.py)
+#           that, at each streaming chunk boundary, predicts whether the last
+#           emitted subword ends a complete word (boundary=1) or not (boundary=0).
+#
+# Workflow :
+#   1. create_boundary_dataset.py  – extracts (enc_feat, pred_feat, label) pairs
+#      from LibriSpeech using the frozen streaming ASR model and saves them
+#      as .pt files under <dataset_dir>.
+#   2. train_boundary_classifier.py – trains BoundaryClassifier on those files.
+#
+# Usage examples
+# ─────────────────────────────────────────────────────────────────────────────
+#   # Step 1 – create dataset
+#   python data/create_boundary_dataset.py hparams/boundary_classifier.yaml
+#
+#   # Step 2 – train
+#   python train/train_boundary_classifier.py hparams/boundary_classifier.yaml
+# ############################################################################
+
+seed: 42
+__set_seed: !apply:speechbrain.utils.seed_everything [42]
+
+# ── ASR model (frozen feature extractor) ────────────────────────────────────
+# h200: boundary classifier sits on the REUSED word/BPE-level streaming ASR
+# (transducer). This is INDEPENDENT of the char-level RNN-T retrained in Stage 1.
+# Path to the YAML used to train the streaming ASR model (word/BPE model def).
+asr_hparams_file: hparams/chunk_streaming_word_fastemit.yaml
+
+# Path to a checkpoint directory (must contain model.ckpt and normalizer.ckpt).
+asr_checkpoint: results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt
+
+# Path to a sentencepiece tokenizer checkpoint (tokenizer.ckpt).
+tokenizer_ckpt: results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt
+
+# ── Streaming configuration (must match the ASR model's inference setting) ──
+chunk_size: 4          # encoder output frames per chunk  (~40 ms / chunk)
+left_context: 32       # left context in # of chunks
+
+# ── Dataset ──────────────────────────────────────────────────────────────────
+# LibriSpeech root directory (contains train-clean-100/, dev-clean/, …). h200 = flac layout.
+data_folder: /wbl-fast/raw/speech/eng/LibriSpeech/data
+
+# Splits used for dataset creation.
+train_splits:
+   - train-clean-100
+   - train-clean-360
+   - train-other-500
+valid_split: 
+   - dev-clean
+   - test-clean
+
+# Directory where the pre-extracted .pt dataset files are written / read from.
+dataset_dir: data/boundary_dataset_h200
+
+# ── BoundaryClassifier architecture ─────────────────────────────────────────
+joint_dim: 640   # must match the ASR model's joint_dim
+hidden_dim: 512  # width of hidden MLP layers
+num_layers: 3    # total linear layers (2 hidden + 1 output)
+dropout: 0.1     # dropout after each hidden GELU
+
+# ── Training ─────────────────────────────────────────────────────────────────
+number_of_epochs: 50
+lr: 0.001
+weight_decay: 0.01
+batch_size: 512
+num_workers: 4
+
+
+# Weight for the non-boundary class (label=0).
+# Boundary tokens are the majority class (many words are single BPE tokens),
+# so upweight the non-boundary class to compensate.
+neg_weight: 3.0
+
+# ── Output ───────────────────────────────────────────────────────────────────
+output_folder: train/results/boundary_classifier_h200
+checkpoint_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/train_log.txt
