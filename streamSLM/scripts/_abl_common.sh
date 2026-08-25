@@ -22,7 +22,7 @@ CACHE_ROOT=${CACHE_ROOT:-${REPO_ROOT}/cache/streamSLM_units_C512_R16}
 # the C512_prequant cache is 44-way for train splits and 6-way for dev/test).
 MANIFEST_WORLD=${MANIFEST_WORLD:-16}
 # Per-split shard counts. Default to MANIFEST_WORLD; override if the cache
-# uses heterogeneous shard counts (e.g. R8_distill has TC100=6, others=22).
+# uses heterogeneous shard counts across splits.
 TC100_WORLD=${TC100_WORLD:-${MANIFEST_WORLD}}
 TC360_WORLD=${TC360_WORLD:-${MANIFEST_WORLD}}
 TC500_WORLD=${TC500_WORLD:-${MANIFEST_WORLD}}
@@ -140,10 +140,12 @@ ACOUSTIC_LAYER_MIX=${ACOUSTIC_LAYER_MIX:-last}
 MODEL_ARCH=${MODEL_ARCH:-streamslm}
 HIER_AR_ORDER=${HIER_AR_ORDER:-duration_last}
 
-VRAM=${VRAM:-48}
-NGPU=${NGPU:-1}               # >1 = DDP via torchrun on a single multi-GPU sr alloc
-SR_QOS=${SR_QOS:-}            # blank = mid (default)
-SR_EXCLUDE=${SR_EXCLUDE:-kandinsky,greco,namjune,delacroix}
+NGPU=${NGPU:-1}               # >1 = DDP via torchrun on a single multi-GPU alloc
+# Job-submission prefix; empty = run directly on this machine. Any scheduler
+# flags (GPU count, VRAM, qos, node excludes, ...) belong in the prefix, e.g.:
+#   LAUNCHER="sr 1 48 --qos=q-low --exclude=nodeA"
+LAUNCHER=${LAUNCHER:-}
+export LAUNCHER
 STREAMSLM_ATTN_IMPL=${STREAMSLM_ATTN_IMPL:-flash_attention_2}
 export STREAMSLM_ATTN_IMPL
 # Toggle HF gradient checkpointing on the backbone. Default off; flip to 1 for
@@ -157,16 +159,10 @@ export STREAMSLM_GRADIENT_CHECKPOINTING
 STREAMSLM_OPT_8BIT=${STREAMSLM_OPT_8BIT:-0}
 export STREAMSLM_OPT_8BIT
 
-EXTRA_ARGS=()
-if [[ -n "${SR_QOS}" ]]; then
-  EXTRA_ARGS+=(--qos="${SR_QOS}")
-fi
-if [[ -n "${SR_EXCLUDE}" ]]; then
-  EXTRA_ARGS+=(--exclude="${SR_EXCLUDE}")
-fi
-if [[ -n "${SR_NODELIST:-}" ]]; then
-  EXTRA_ARGS+=(--nodelist="${SR_NODELIST}")
-fi
+# launch <cmd...>: run through ${LAUNCHER} when set, else directly.
+launch() {
+  if [[ -n "${LAUNCHER}" ]]; then ${LAUNCHER} "$@"; else "$@"; fi
+}
 
 export WANDB_MODE=${WANDB_MODE:-disabled}
 export WANDB_DISABLED=${WANDB_DISABLED:-true}
@@ -231,15 +227,15 @@ echo "[plan]   moss_local hidden=${MOSS_LOCAL_HIDDEN} heads=${MOSS_LOCAL_HEADS} 
 echo "[plan]   packing=${PACKING} pack_max_tokens=${PACK_MAX_TOKENS} text_kl_weight=${TEXT_KL_WEIGHT}"
 echo "[plan]   lr=${LR} warmup=${WARMUP} max_steps=${MAX_STEPS} save=${SAVE_EVERY} val=${VAL_EVERY} grad_clip=${GRAD_CLIP} lr_step_at=${LR_STEP_AT} lr_step_to=${LR_STEP_TO}"
 echo "[plan]   delay=${DELAY} resume=${RESUME:-<fresh>} resume_model_only=${RESUME_MODEL_ONLY}"
-echo "[plan]   sr ${NGPU} ${VRAM} ${SR_QOS:-mid} exclude=${SR_EXCLUDE:-<none>} nodelist=${SR_NODELIST:-<any>} attn_impl=${STREAMSLM_ATTN_IMPL} grad_ckpt=${STREAMSLM_GRADIENT_CHECKPOINTING} opt_8bit=${STREAMSLM_OPT_8BIT}"
+echo "[plan]   ngpu=${NGPU} launcher=${LAUNCHER:-<direct>} attn_impl=${STREAMSLM_ATTN_IMPL} grad_ckpt=${STREAMSLM_GRADIENT_CHECKPOINTING} opt_8bit=${STREAMSLM_OPT_8BIT}"
 echo "[plan]   OUT_DIR=${OUT_DIR}"
 echo "[plan]   LOG_FILE=${LOG_FILE}"
 
-# Build the command. NGPU>1 -> DDP via torchrun on a single multi-GPU sr alloc.
+# Build the command. NGPU>1 -> DDP via torchrun on a single multi-GPU alloc.
 if (( NGPU > 1 )); then
   CMD=(torchrun --standalone --nproc_per_node="${NGPU}" -m streamSLM.train.train)
 else
-  CMD=("${PYTHON_BIN:-python}" -u -m streamSLM.train.train)
+  CMD=("${PYTHON:-python}" -u -m streamSLM.train.train)
 fi
 CMD+=(
   --manifest "${TC100_FILES[@]}" "${TC360_FILES[@]}" "${TC500_FILES[@]}" "${EMI_FILES[@]}" "${EMI_FULL_FILES[@]}"
@@ -318,13 +314,13 @@ fi
 
 LAUNCH_FG=${LAUNCH_FG:-0}    # 1 = run synchronously (used by watchdog chain)
 if [[ "${LAUNCH_FG}" == "1" ]]; then
-  sr "${NGPU}" "${VRAM}" "${EXTRA_ARGS[@]}" "${CMD[@]}" > "${LOG_FILE}" 2>&1
+  launch "${CMD[@]}" > "${LOG_FILE}" 2>&1
   rc=$?
   echo "[done] rc=${rc}  ${RUN_NAME}  log=${LOG_FILE}"
   exit "${rc}"
 fi
 
-nohup sr "${NGPU}" "${VRAM}" "${EXTRA_ARGS[@]}" "${CMD[@]}" > "${LOG_FILE}" 2>&1 &
+nohup bash -c 'if [[ -n "${LAUNCHER}" ]]; then exec ${LAUNCHER} "$@"; else exec "$@"; fi' _ "${CMD[@]}" > "${LOG_FILE}" 2>&1 &
 PID=$!
 echo "[submitted] ${RUN_NAME} pid=${PID}  log=${LOG_FILE}"
 disown "${PID}" 2>/dev/null || true

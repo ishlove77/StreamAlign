@@ -3,7 +3,7 @@
 #
 # Single-GPU SALMon (~30-60 min) followed by 8-way parallel StoryCloze
 # (~30 min). Both write to results/{salmon,storycloze}/<ckpt_tag>/loss/.
-# Both run under sr 1 24 --qos=q-low so they queue under the 24 GB pool.
+# Set LAUNCHER to submit through your scheduler (e.g. "sr 1 24 --qos=q-low").
 
 set -uo pipefail
 
@@ -11,8 +11,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "${REPO_ROOT}"
 
 # --- Checkpoints --------------------------------------------------------- #
-SLM_CKPT=${SLM_CKPT:-${REPO_ROOT}/checkpoints/streamSLM/streamalign_slm_r16/step_00070000.pt}
-TEACHER_CKPT=${TEACHER_CKPT:-/home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt}
+CHECKPOINTS_ROOT=${CHECKPOINTS_ROOT:-${REPO_ROOT}/weights}
+SLM_CKPT=${SLM_CKPT:-${CHECKPOINTS_ROOT}/Streamalign-SLM-R16/step_00185000.pt}
+TEACHER_CKPT=${TEACHER_CKPT:-${CHECKPOINTS_ROOT}/Streamalign-R16/rvq_teacher/epoch_22.pt}
 
 # --- Quantizer knobs ----------------------------------------------------- #
 VARIANT=rvq

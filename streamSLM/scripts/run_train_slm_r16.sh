@@ -79,7 +79,8 @@ export PRETRAIN_MAX_STEPS=${PRETRAIN_MAX_STEPS:-300000}
 export FINETUNE_MAX_STEPS=${FINETUNE_MAX_STEPS:-210000}
 
 export NGPU=${NGPU:-1}
-export VRAM=${VRAM:-48}
+# Job-submission prefix; empty = run directly. E.g. LAUNCHER="sr 1 48 --qos=q-low"
+export LAUNCHER=${LAUNCHER:-}
 export STREAMSLM_ATTN_IMPL=${STREAMSLM_ATTN_IMPL:-sdpa}
 export STREAMSLM_LIGER=${STREAMSLM_LIGER:-0}
 export MOSHI_ROOT=${MOSHI_ROOT:?set MOSHI_ROOT to a moshi 0.2.13 checkout (hier depformer)}

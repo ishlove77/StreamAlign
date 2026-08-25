@@ -10,19 +10,19 @@
 # wav (no separate output tree). Existing TextGrids are skipped — pass
 # OVERWRITE=1 to regenerate.
 #
-# Resources: WORLD shards × `sr 1 24 --qos=q-low`, default WORLD=16 per
-# dataset. SALMon (2000 wavs) and StoryCloze (7484 wavs) launch in parallel
-# → 32 shards total, well within the 32×24GB cap.
+# Resources: WORLD shards × one ${LAUNCHER} job each (default WORLD=16 per
+# dataset). SALMon (2000 wavs) and StoryCloze (7484 wavs) launch in parallel.
+# With empty LAUNCHER all shards run locally — reduce WORLD_* accordingly.
 
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${REPO_ROOT}"
 
-# --- 3419 streaming-ASR ckpt (canonical) --------------------------------- #
-WORD_CKPT=${WORD_CKPT:-/home/streamalign/streamASR/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt}
-WORD_HPARAMS=${WORD_HPARAMS:-/home/streamalign/streamASR/hparams/chunk_streaming_word_fastemit.yaml}
-TOKENIZER_CKPT=${TOKENIZER_CKPT:-/home/streamalign/streamASR/results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt}
+# --- Streaming-ASR ckpt (canonical) -------------------------------------- #
+WORD_CKPT=${WORD_CKPT:-${REPO_ROOT}/streamASR/train/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt}
+WORD_HPARAMS=${WORD_HPARAMS:-${REPO_ROOT}/streamASR/hparams/chunk_streaming_word_fastemit.yaml}
+TOKENIZER_CKPT=${TOKENIZER_CKPT:-${REPO_ROOT}/streamASR/train/results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt}
 
 # Streaming knobs match the training-data extraction (see CLAUDE.md).
 CHUNK_SIZE=${CHUNK_SIZE:-4}
@@ -44,14 +44,15 @@ STORYCLOZE_CSV=${STORYCLOZE_CSV:-${MANIFEST_DIR}/storycloze.csv}
 # Override SALMON_TG_ROOT / STORYCLOZE_TG_ROOT only if you need a mirror
 # (e.g. read-only data tree). The eval scripts default --tg_root to the
 # wav root and pick the TGs up from there.
-SALMON_DATA_ROOT=${SALMON_DATA_ROOT:-/home/datasets/SALMon}
-STORYCLOZE_DATA_ROOT=${STORYCLOZE_DATA_ROOT:-/home/datasets/StoryCloze}
+SALMON_DATA_ROOT=${SALMON_DATA_ROOT:?set SALMON_DATA_ROOT to your SALMon root}
+STORYCLOZE_DATA_ROOT=${STORYCLOZE_DATA_ROOT:?set STORYCLOZE_DATA_ROOT to your StoryCloze root}
 SALMON_TG_ROOT=${SALMON_TG_ROOT:-${SALMON_DATA_ROOT}}
 STORYCLOZE_TG_ROOT=${STORYCLOZE_TG_ROOT:-${STORYCLOZE_DATA_ROOT}}
 
-# --- Slurm knobs --------------------------------------------------------- #
-SR_QOS=${SR_QOS:-q-low}
-SR_EXCLUDE=${SR_EXCLUDE:-kandinsky,greco,namjune,matisse}
+# --- Job submission ------------------------------------------------------- #
+# Per-shard job-submission prefix; empty = run all shards locally.
+# Example (Slurm wrapper): LAUNCHER="sr 1 24 --qos=q-low"
+LAUNCHER=${LAUNCHER:-}
 
 # --- Logging ------------------------------------------------------------- #
 LOG_DIR=${LOG_DIR:-${REPO_ROOT}/logs/eval_tg_gen}
@@ -110,7 +111,7 @@ echo "[run_eval_tg_gen] manifests: $(wc -l <"${SALMON_CSV}") SALMon lines, $(wc 
 launch_shard() {
   local ds=$1 csv=$2 data_root=$3 tg_root=$4 rank=$5 world=$6
   local log="${LOG_DIR}/${ds}/shard${rank}_of${world}.log"
-  sr 1 24 --qos="${SR_QOS}" -x "${SR_EXCLUDE}" \
+  ${LAUNCHER} \
     python "${GEN_PY}" \
       --hparams_file "${WORD_HPARAMS}" \
       --checkpoint   "${WORD_CKPT}" \

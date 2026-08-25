@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch sharded CPU-only preprocessing workers via `sr 0` for **LibriSpeech**.
+# Launch sharded CPU-only preprocessing workers for **LibriSpeech**.
 # Each job runs `precompute_speech_tokens.py --rank N --world_size W` with the
 # LibriSpeech root and a `_librispeech` cache subdir, so the LibriTTS cache
 # under streamASR/cache/cosyvoice_features/{train-clean-100, ...}/ is NOT
@@ -16,22 +16,23 @@ set -euo pipefail
 STREAMASR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${STREAMASR_ROOT}"
 
-LIBRISPEECH_ROOT="${LIBRISPEECH_ROOT:-/home/datasets/LibriSpeech}"
+LIBRISPEECH_ROOT="${LIBRISPEECH_ROOT:?set LIBRISPEECH_ROOT to your LibriSpeech root}"
 CACHE_SUBDIR="${CACHE_SUBDIR:-_librispeech}"
 SPLITS="${SPLITS:-train-clean-100 train-clean-360 train-other-500 dev-clean dev-other}"
 
 WORLD_SIZE="${WORLD_SIZE:-16}"
 EXTRA="${EXTRA:-}"
+# Per-shard job-submission prefix; empty = run locally (e.g. a Slurm wrapper).
+LAUNCHER="${LAUNCHER:-}"
 
 mkdir -p logs/preprocess_librispeech
 
-EXCLUDE_NODES="${EXCLUDE_NODES:-greco}"
 
 run_shard () {
     local rank="$1"; shift
     local logf="logs/preprocess_librispeech/shard_${rank}.log"
-    echo ">>> rank=${rank}/${WORLD_SIZE}  (sr 0, cpu)  log=${logf}"
-    nohup sr 0 --exclude="${EXCLUDE_NODES}" \
+    echo ">>> rank=${rank}/${WORLD_SIZE}  (cpu)  log=${logf}"
+    nohup ${LAUNCHER} \
         python scripts/precompute/precompute_speech_tokens.py \
             --rank "${rank}" --world_size "${WORLD_SIZE}" \
             --data_root "${LIBRISPEECH_ROOT}" \

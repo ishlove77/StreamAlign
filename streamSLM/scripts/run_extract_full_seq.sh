@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Full re-extraction with the fixed (word-boundary-preserving) path.
 #
-# Splits run sequentially in this order; within each split, 8 GPU shards
-# run in parallel (--world_size=8, ranks 0..7). Each shard is one
-# `sr 1 24` call (mid QoS, default).
+# Splits run sequentially in this order; within each split, WORLD GPU shards
+# run in parallel (--world_size=WORLD). Each shard is one ${LAUNCHER} call
+# (or a direct python process when LAUNCHER is empty).
 #
 #   1) LibriSpeech train-clean-100
 #   2) LibriSpeech train-clean-360
@@ -25,24 +25,26 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${REPO_ROOT}"
 
-CACHE_ROOT=${CACHE_ROOT:-${REPO_ROOT}/cache/streamSLM_units_C2048_fixed}
-LOG_DIR=${LOG_DIR:-${REPO_ROOT}/logs/streamSLM_extract_C2048_fixed}
+# ---- environment (override via env) ----------------------------------------
+CACHE_ROOT=${CACHE_ROOT:-${REPO_ROOT}/cache/streamSLM_units_C512_R16}
+LOG_DIR=${LOG_DIR:-${REPO_ROOT}/logs/streamSLM_extract_C512_R16}
 
-CHECKPOINT=${CHECKPOINT:-/home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt}
-EMILIA_CSV=${EMILIA_CSV:-/home/datasets/Emilia/emilia_en_400h.csv}
+CHECKPOINTS_ROOT=${CHECKPOINTS_ROOT:-${REPO_ROOT}/weights}
+CHECKPOINT=${CHECKPOINT:-${CHECKPOINTS_ROOT}/Streamalign-R16/rvq_teacher/epoch_22.pt}
+EMILIA_CSV=${EMILIA_CSV:?set EMILIA_CSV to the Emilia 400h subset csv}
+COSYVOICE_ROOT=${COSYVOICE_ROOT:-${REPO_ROOT}/streamASR/third_party/CosyVoice}
+export COSYVOICE_ROOT
+export PYTHONPATH="${COSYVOICE_ROOT}:${COSYVOICE_ROOT}/third_party/Matcha-TTS:${PYTHONPATH:-}"
+# Job-submission prefix per shard; empty = run directly on this machine.
+# Example (Slurm wrapper): LAUNCHER="sr 1 24 --qos=q-low --exclude=nodeA"
+LAUNCHER=${LAUNCHER:-}
+# ----------------------------------------------------------------------------
 
 WORLD=${WORLD:-8}
-VRAM=${VRAM:-24}
 BATCH_SIZE=${BATCH_SIZE:-32}
 NUM_WORKERS=${NUM_WORKERS:-8}
 TOKENIZER=${TOKENIZER:-llama}
 BF16=${BF16:-1}
-# QoS: long-running batch tokenization fits "low" quota best (mid quota's
-# QOSMaxBillingPerUser cap blocks >~1 concurrent 24GB shard for this user).
-SR_QOS=${SR_QOS:-q-low}
-# Some titanrtx nodes (kandinsky, greco) report torch.cuda.is_available()=False
-# even with --gres=gpu:1. Exclude them so shards don't crash mid-run.
-SR_EXCLUDE=${SR_EXCLUDE:-kandinsky,greco,namjune}
 
 export WANDB_MODE=${WANDB_MODE:-disabled}
 export WANDB_DISABLED=${WANDB_DISABLED:-true}
@@ -53,9 +55,9 @@ mkdir -p "${CACHE_ROOT}" "${LOG_DIR}"
 echo "[plan] CACHE_ROOT=${CACHE_ROOT}"
 echo "[plan] LOG_DIR   =${LOG_DIR}"
 echo "[plan] CHECKPOINT=${CHECKPOINT}"
-echo "[plan] WORLD=${WORLD} VRAM=${VRAM} batch=${BATCH_SIZE} workers=${NUM_WORKERS} bf16=${BF16} qos=${SR_QOS} exclude=${SR_EXCLUDE:-<none>}"
+echo "[plan] WORLD=${WORLD} batch=${BATCH_SIZE} workers=${NUM_WORKERS} bf16=${BF16} launcher=${LAUNCHER:-<direct>}"
 echo "[plan] order: ls/tc100 -> ls/tc360 -> ls/tc500 -> emilia/400h"
-echo "[plan] each split: ${WORLD} parallel shards (sr 1 ${VRAM} --qos=${SR_QOS})"
+echo "[plan] each split: ${WORLD} parallel shards"
 
 # Run one split's 8 shards in parallel and block until they all finish.
 #   $1 dataset    "librispeech" | "emilia"
@@ -75,11 +77,7 @@ run_split() {
     echo "  [submit] ${dataset}/${split} shard ${rank}/${WORLD}  ->  ${logf}"
     local bf16_flag=""
     if [[ "${BF16}" == "1" ]]; then bf16_flag="--bf16"; fi
-    local qos_flag=""
-    if [[ -n "${SR_QOS}" && "${SR_QOS}" != "mid" ]]; then qos_flag="--qos=${SR_QOS}"; fi
-    local exclude_flag=""
-    if [[ -n "${SR_EXCLUDE}" ]]; then exclude_flag="--exclude=${SR_EXCLUDE}"; fi
-    sr 1 "${VRAM}" ${qos_flag} ${exclude_flag} python -u -m streamSLM.extract.extract_tokens \
+    ${LAUNCHER} python -u -m streamSLM.extract.extract_tokens \
       --dataset "${dataset}" \
       --split "${split}" \
       ${EXTRA[@]:+"${EXTRA[@]}"} \

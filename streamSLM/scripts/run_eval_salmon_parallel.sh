@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Launch StreamSLM SALMon evaluation in WORLD parallel shards.
 #
-# Each shard = one `sr 1 24 --qos=q-low` GPU; they run concurrently and
+# Each shard = one ${LAUNCHER} job (or a local process when LAUNCHER is
+# empty — for local runs prefer run_eval_salmon.sh, since WORLD local shards
+# all land on this machine); they run concurrently and
 # write per-shard JSONs. After all shards finish, this script merges them
 # into a single summary file matching the layout of the single-GPU launcher
 # (run_eval_salmon.sh).
@@ -17,8 +19,7 @@
 #   RVQ_LOSS_WEIGHTS : per-codebook acoustic weights for 'loss' mode
 #                      (comma list, e.g. 1,1,...; empty = uniform)
 #   WORLD        : number of parallel shards (default: 8)
-#   VRAM         : per-shard GPU VRAM in GB (default: 24)
-#   SR_QOS       : QoS pool, e.g. q-low (default). Empty = mid quota.
+#   LAUNCHER     : per-shard job-submission prefix (e.g. "sr 1 24 --qos=q-low")
 
 set -uo pipefail
 
@@ -27,10 +28,16 @@ cd "${REPO_ROOT}"
 
 # Defaults align with the current canonical hier-durfirst-durreg sweep
 # (RVQ R16 teacher + R16 SLM). Override via env vars to evaluate other configs.
-SLM_CKPT=${SLM_CKPT:-/home/streamalign/checkpoints/streamSLM/streamalign_slm_r16/step_00070000.pt}
-TEACHER_CKPT=${TEACHER_CKPT:-/home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt}
+CHECKPOINTS_ROOT=${CHECKPOINTS_ROOT:-${REPO_ROOT}/weights}
+SLM_CKPT=${SLM_CKPT:-${CHECKPOINTS_ROOT}/Streamalign-SLM-R16/step_00185000.pt}
+TEACHER_CKPT=${TEACHER_CKPT:-${CHECKPOINTS_ROOT}/Streamalign-R16/rvq_teacher/epoch_22.pt}
+ASR_HPARAMS=${ASR_HPARAMS:-${REPO_ROOT}/streamASR/hparams/alignment.yaml}
+TRUTH_MODEL_CKPT=${TRUTH_MODEL_CKPT:-${REPO_ROOT}/streamASR/results/char_asr_ckpt}
+COSYVOICE_ROOT=${COSYVOICE_ROOT:-${REPO_ROOT}/streamASR/third_party/CosyVoice}
+export COSYVOICE_ROOT
+export PYTHONPATH="${COSYVOICE_ROOT}:${COSYVOICE_ROOT}/third_party/Matcha-TTS:${PYTHONPATH:-}"
 
-DATA_ROOT=${DATA_ROOT:-/home/datasets/SALMon}
+DATA_ROOT=${DATA_ROOT:?set DATA_ROOT to your SALMon dataset root}
 # TGs are written alongside the wavs (see run_eval_tg_gen.sh); only set
 # TG_ROOT if they live in a separate mirror.
 TG_ROOT=${TG_ROOT:-${DATA_ROOT}}
@@ -50,15 +57,9 @@ ACOUSTIC_WEIGHT=${ACOUSTIC_WEIGHT:-1.0}
 # Optional per-codebook acoustic weights for 'loss' mode (comma list,
 # e.g. the training rvq_loss_weights); empty = uniform sum over R.
 RVQ_LOSS_WEIGHTS=${RVQ_LOSS_WEIGHTS:-}
-SR_EXCLUDE=${SR_EXCLUDE:-kandinsky,greco,namjune,matisse}
 WORLD=${WORLD:-8}
-VRAM=${VRAM:-24}
-SR_QOS=${SR_QOS-q-low}
-
-QOS_ARGS=()
-if [[ -n "${SR_QOS}" ]]; then
-  QOS_ARGS+=(--qos="${SR_QOS}")
-fi
+# Per-shard job-submission prefix; empty = run all shards locally.
+LAUNCHER=${LAUNCHER:-}
 
 CKPT_TAG="$(basename "$(dirname "${SLM_CKPT}")")_$(basename "${SLM_CKPT}" .pt)"
 TAG_DIR="${OUT_DIR}/${CKPT_TAG}/${SCORING_MODE}"
@@ -70,7 +71,7 @@ echo "[launch] OUT_DIR=${OUT_DIR}  TAG_DIR=${TAG_DIR}"
 echo "[launch] SCORING_MODE=${SCORING_MODE}  WORLD=${WORLD}"
 echo "[launch] TEXT_WEIGHT=${TEXT_WEIGHT}  ACOUSTIC_WEIGHT=${ACOUSTIC_WEIGHT}"
 echo "[launch] RVQ_LOSS_WEIGHTS=${RVQ_LOSS_WEIGHTS:-<uniform>}"
-echo "[launch] sr 1 ${VRAM} qos=${SR_QOS:-mid} exclude=${SR_EXCLUDE}"
+echo "[launch] launcher=${LAUNCHER:-<direct>}"
 
 export WANDB_MODE=disabled
 export WANDB_DISABLED=true
@@ -85,8 +86,10 @@ for R in $(seq 0 $((WORLD-1))); do
   LOG_FILE="${LOG_DIR}/salmon_${CKPT_TAG}_${SCORING_MODE}.shard${R}_of${WORLD}.log"
   rm -f "${LOG_FILE}"
   echo "[launch] shard ${R}/${WORLD} -> ${LOG_FILE}"
-  nohup sr 1 "${VRAM}" "${QOS_ARGS[@]}" --exclude="${SR_EXCLUDE}" \
+  nohup ${LAUNCHER} \
     python -m streamSLM.eval.salmon \
+      --hparams "${ASR_HPARAMS}" \
+      --truthmodel_checkpoint "${TRUTH_MODEL_CKPT}" \
       --slm_checkpoint "${SLM_CKPT}" \
       --teacher_checkpoint "${TEACHER_CKPT}" \
       --data_root "${DATA_ROOT}" \

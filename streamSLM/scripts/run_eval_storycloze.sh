@@ -23,9 +23,17 @@ cd "${REPO_ROOT}"
 # Defaults align with the current canonical hier-durfirst-durreg sweep
 # (RVQ teacher + R16 SLM). Override SLM_CKPT / TEACHER_CKPT / VARIANT etc.
 # via env vars to evaluate other configs.
-SLM_CKPT=${SLM_CKPT:-${REPO_ROOT}/checkpoints/streamSLM/streamalign_slm_r16/step_00185000.pt}
-TEACHER_CKPT=${TEACHER_CKPT:-/home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt}
-DATA_ROOT=${DATA_ROOT:-/home/datasets/StoryCloze}
+CHECKPOINTS_ROOT=${CHECKPOINTS_ROOT:-${REPO_ROOT}/weights}
+SLM_CKPT=${SLM_CKPT:-${CHECKPOINTS_ROOT}/Streamalign-SLM-R16/step_00185000.pt}
+TEACHER_CKPT=${TEACHER_CKPT:-${CHECKPOINTS_ROOT}/Streamalign-R16/rvq_teacher/epoch_22.pt}
+DATA_ROOT=${DATA_ROOT:?set DATA_ROOT to your StoryCloze dataset root}
+ASR_HPARAMS=${ASR_HPARAMS:-${REPO_ROOT}/streamASR/hparams/alignment.yaml}
+TRUTH_MODEL_CKPT=${TRUTH_MODEL_CKPT:-${REPO_ROOT}/streamASR/results/char_asr_ckpt}
+COSYVOICE_ROOT=${COSYVOICE_ROOT:-${REPO_ROOT}/streamASR/third_party/CosyVoice}
+export COSYVOICE_ROOT
+export PYTHONPATH="${COSYVOICE_ROOT}:${COSYVOICE_ROOT}/third_party/Matcha-TTS:${PYTHONPATH:-}"
+# Job-submission prefix; empty = run directly. E.g. LAUNCHER="sr 1 24 --qos=q-low"
+LAUNCHER=${LAUNCHER:-}
 OUT_DIR=${OUT_DIR:-${REPO_ROOT}/results/storycloze}
 LOG_DIR=${LOG_DIR:-${REPO_ROOT}/logs/streamSLM_eval}
 mkdir -p "${LOG_DIR}"
@@ -37,7 +45,6 @@ VARIANT=${VARIANT:-rvq}
 RVQ_R=${RVQ_R:-16}
 RVQ_CODEBOOK_SIZE=${RVQ_CODEBOOK_SIZE:-512}
 SCORING_MODE=${SCORING_MODE:-loss}
-SR_EXCLUDE=${SR_EXCLUDE:-kandinsky,greco,namjune,matisse}
 
 CKPT_TAG="$(basename "$(dirname "${SLM_CKPT}")")_$(basename "${SLM_CKPT}" .pt)"
 LOG_FILE="${LOG_DIR}/storycloze_${CKPT_TAG}_${SCORING_MODE}.log"
@@ -57,8 +64,10 @@ export RVQ_CODEBOOK_SIZE="${RVQ_CODEBOOK_SIZE}"
 # pool includes Turing/Volta nodes (basquiat, botticelli, rtx6000-class).
 export STREAMSLM_ATTN_IMPL="${STREAMSLM_ATTN_IMPL:-sdpa}"
 
-sr 1 24 --qos=q-low --exclude="${SR_EXCLUDE}" \
+${LAUNCHER} \
   python -m streamSLM.eval.storycloze \
+    --hparams "${ASR_HPARAMS}" \
+    --truthmodel_checkpoint "${TRUTH_MODEL_CKPT}" \
     --slm_checkpoint "${SLM_CKPT}" \
     --teacher_checkpoint "${TEACHER_CKPT}" \
     --data_root "${DATA_ROOT}" \

@@ -11,17 +11,27 @@
 
 set -uo pipefail
 
-REPO_ROOT=${REPO_ROOT:-/home/streamalign}
+REPO_ROOT=${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}
 cd "${REPO_ROOT}"
 
-CKPT_DIR=${REPO_ROOT}/checkpoints/streamSLM/streamalign_slm_r16
-SLM_CKPT=${SLM_CKPT:-${CKPT_DIR}/step_00010000.pt}
-TEACHER_CKPT=${TEACHER_CKPT:-/home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt}
+# ---- environment (override via env) ----------------------------------------
+CHECKPOINTS_ROOT=${CHECKPOINTS_ROOT:-${REPO_ROOT}/weights}
+SLM_CKPT=${SLM_CKPT:-${CHECKPOINTS_ROOT}/Streamalign-SLM-R16/step_00185000.pt}
+TEACHER_CKPT=${TEACHER_CKPT:-${CHECKPOINTS_ROOT}/Streamalign-R16/rvq_teacher/epoch_22.pt}
+COSYVOICE_ROOT=${COSYVOICE_ROOT:-${REPO_ROOT}/streamASR/third_party/CosyVoice}
+export COSYVOICE_ROOT
+export PYTHONPATH="${COSYVOICE_ROOT}:${COSYVOICE_ROOT}/third_party/Matcha-TTS:${PYTHONPATH:-}"
+PYTHON=${PYTHON:-python}
+# Job-submission prefix; empty = run directly. E.g. LAUNCHER="sr 1 24 --qos=q-low"
+LAUNCHER=${LAUNCHER:-}
+# ----------------------------------------------------------------------------
 
-# Test-clean prompts for this RVQ cache (32-way).
-LIBRI_TC_ROOT=${LIBRI_TC_ROOT:-/home/datasets/LibriSpeech/test-clean}
-UNITS_CACHE=${UNITS_CACHE:-${REPO_ROOT}/cache/streamSLM_units_C512_R16_rvq/librispeech/test-clean/test-clean}
-MANIFEST_GLOB=${MANIFEST_GLOB:-${REPO_ROOT}/cache/streamSLM_units_C512_R16_rvq/librispeech/test-clean/manifest_shard*_of32.csv}
+# Test-clean prompts for this RVQ cache.
+LIBRISPEECH_ROOT=${LIBRISPEECH_ROOT:?set LIBRISPEECH_ROOT to your LibriSpeech root}
+LIBRI_TC_ROOT=${LIBRI_TC_ROOT:-${LIBRISPEECH_ROOT}/test-clean}
+CACHE_ROOT=${CACHE_ROOT:-${REPO_ROOT}/cache/streamSLM_units_C512_R16}
+UNITS_CACHE=${UNITS_CACHE:-${CACHE_ROOT}/librispeech/test-clean/test-clean}
+MANIFEST_GLOB=${MANIFEST_GLOB:-${CACHE_ROOT}/librispeech/test-clean/manifest_shard*_of32.csv}
 
 NUM_UTTS=${NUM_UTTS:-5}
 SAMPLE_SEED=${SAMPLE_SEED:-0}
@@ -50,10 +60,6 @@ CKPT_TAG=${CKPT_TAG:-rvq_R16}
 OUT_DIR=${REPO_ROOT}/out/slm_rvq_${CKPT_TAG}
 LOG=${REPO_ROOT}/logs/streamSLM_train/infer_rvq_${CKPT_TAG}.log
 mkdir -p "${OUT_DIR}" "$(dirname "${LOG}")"
-
-SR_EXCLUDE=${SR_EXCLUDE:-kandinsky,greco,namjune,matisse}
-SR_QOS=${SR_QOS:-q-low}
-VRAM=${VRAM:-24}
 
 # RVQ teacher knobs (same as the extraction worker).
 export RVQ_R=${RVQ_R:-16}
@@ -96,8 +102,8 @@ if [[ -n "${REDO_FINAL_ACO:-}" && "${REDO_FINAL_ACO}" != "0" ]]; then
   log "redo_final_aco: ${REDO_FINAL_ACO}"
 fi
 
-sr 1 ${VRAM} --qos=${SR_QOS} --exclude="${SR_EXCLUDE}" \
-  ${PYTHON_BIN:-python} -u -m streamSLM.inference.speech_cont_pipeline \
+${LAUNCHER} \
+  "${PYTHON}" -u -m streamSLM.inference.speech_cont_pipeline \
     --checkpoint "${SLM_CKPT}" \
     --teacher_checkpoint "${TEACHER_CKPT}" \
     --utts_csv "${UTTS_FILE}" \
