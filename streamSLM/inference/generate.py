@@ -298,9 +298,29 @@ def generate(
 # --------------------------------------------------------------------------- #
 # CLI
 # --------------------------------------------------------------------------- #
+def _normalize_legacy_args(saved_args: dict) -> dict:
+    """Map pre-rename (FSQ-era) checkpoint keys/values to the current schema.
+
+    Checkpoints written before the RVQ schema rename stored the depth-predictor
+    type under ``residual_fsq_predictor_type`` and the acoustic target as
+    ``"fsq"``. Without this mapping such checkpoints silently fall back to the
+    defaults and load the wrong architecture.
+    """
+    if ("acoustic_predictor_type" not in saved_args
+            and "residual_fsq_predictor_type" in saved_args):
+        saved_args["acoustic_predictor_type"] = saved_args["residual_fsq_predictor_type"]
+        print("[legacy-ckpt] residual_fsq_predictor_type -> acoustic_predictor_type "
+              f"({saved_args['acoustic_predictor_type']})")
+    if saved_args.get("acoustic_target") == "fsq":
+        saved_args["acoustic_target"] = "rvq"
+        print("[legacy-ckpt] acoustic_target 'fsq' -> 'rvq'")
+    return saved_args
+
+
 def _load_streamslm(checkpoint: str, device: torch.device) -> Tuple[nn.Module, TokenizerConfig, ModelConfig]:
     ckpt = torch.load(checkpoint, map_location="cpu", weights_only=False)
     saved_args = ckpt.get("args", {})
+    saved_args = _normalize_legacy_args(saved_args)
     tok_cfg = TokenizerConfig(
         token_type=saved_args.get("token_type", "rvq"),
         rvq_num_quantizers=saved_args.get("rvq_num_quantizers", 16),
