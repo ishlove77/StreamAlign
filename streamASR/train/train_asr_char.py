@@ -10,7 +10,7 @@ The system uses:
 - CER evaluation
 
 Usage:
-    python train_asr.py /home/streamalign/streamASR/hparams/train_chunk_streaming.yaml
+    python train_asr.py <streamASR>/hparams/chunk_streaming_char.yaml
 
 Authors
  * Based on SpeechBrain LibriSpeech Transducer recipe
@@ -349,6 +349,10 @@ def dataio_prepare(hparams, tokenizer):
     test_csvs = hparams["test_csv"]
     if not isinstance(test_csvs, list):
         test_csvs = [test_csvs]
+    missing = [c for c in test_csvs if not os.path.exists(c)]
+    if missing:
+        print(f"[data] skipping missing test csvs: {missing}")
+        test_csvs = [c for c in test_csvs if os.path.exists(c)]
     test_datasets = {}
     for csv_path in test_csvs:
         name = Path(csv_path).stem
