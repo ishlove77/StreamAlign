@@ -33,7 +33,7 @@ Usage
 python generate_chunk_textgrids.py \\
     --hparams_file /path/to/chunk_streaming_word_fastemit.yaml \\
     --checkpoint   /path/to/checkpoint_dir \\
-    --input_dir    /home/datasets/LibriSpeech \\
+    --input_dir    <LIBRISPEECH_ROOT> \\
     --splits       train-clean-100 train-clean-360 \\
     [--chunk_size  4] \\
     [--left_context 32] \\
@@ -53,6 +53,8 @@ import traceback
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+_STREAMASR_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 import torch
 import torch.nn.functional as F
@@ -505,23 +507,22 @@ def parse_args():
     )
     p.add_argument(
         "--hparams_file",
-        default=(
-            "/home/streamalign/streamASR/hparams/"
-            "chunk_streaming_word_fastemit.yaml"
+        default=os.path.join(
+            _STREAMASR_ROOT, "hparams", "chunk_streaming_word_fastemit.yaml"
         ),
         help="Path to the word-model hparams YAML (SentencePiece/BPE).",
     )
     p.add_argument(
         "--checkpoint",
-        default=(
-            "/home/streamalign/streamASR/results/"
-            "conformer_transducer_char/word_fastemit/save/word_asr_ckpt"
-        ),
+        default=os.environ.get("WORD_ASR_CKPT", os.path.join(
+            _STREAMASR_ROOT, "train", "results",
+            "conformer_transducer_char", "word_fastemit", "save", "word_asr_ckpt",
+        )),
         help="Path to the word-model checkpoint directory.",
     )
     p.add_argument(
         "--input_dir",
-        default="/home/datasets/LibriSpeech",
+        default=os.environ.get("LIBRISPEECH_ROOT", "/data/LibriSpeech"),
         help="Root LibriSpeech directory.",
     )
     p.add_argument(
@@ -739,7 +740,9 @@ def main():
 
         for split in args.splits:
             split_dir = input_root / split
-            wav_files = sorted(split_dir.glob("**/*.wav"))
+            wav_files = sorted(split_dir.glob("**/*.wav")) or sorted(
+                split_dir.glob("**/*.flac")
+            )
             if args.max_files:
                 wav_files = wav_files[: args.max_files]
             if args.world_size > 1:

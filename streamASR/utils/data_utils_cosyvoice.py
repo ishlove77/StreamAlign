@@ -26,7 +26,7 @@ def _resolve_data_path(path_value: str, data_folder: str) -> str:
 
         legacy_roots = os.environ.get(
             "LEGACY_SPEECH_DATA_ROOTS",
-            "/home/datasets/LibriSpeech:/home/datasets/LibriTTS",
+            "/data/LibriSpeech:/data/LibriTTS",
         ).split(":")
         for legacy_root in legacy_roots:
             legacy_root = os.path.normpath(legacy_root)
@@ -210,20 +210,38 @@ class LibriSpeechCSVDataset(Dataset):
 
             idx = random.randint(0, len(self.samples) - 1)
 
-_LIBRI_ROOT = os.environ.get(
-    "LIBRI_ROOT",
-    "/home/datasets/LibriSpeech",
-)
+def _librispeech_root() -> str:
+    root = os.environ.get("LIBRISPEECH_ROOT")
+    if root:
+        return root
+    legacy = os.environ.get("LIBRI_ROOT")
+    if legacy:
+        print("[data_utils_cosyvoice] LIBRI_ROOT is deprecated; "
+              "use LIBRISPEECH_ROOT instead.")
+        return legacy
+    return "/data/LibriSpeech"
+
+
+_LIBRI_ROOT = _librispeech_root()
+# Explicit alias for consumers that mean "the LibriSpeech flac root".
+_LIBRISPEECH_ROOT = _LIBRI_ROOT
+# LibriTTS root (wav layout), for consumers building LibriTTS datasets.
+_LIBRITTS_ROOT = os.environ.get("LIBRITTS_ROOT", "/data/LibriTTS")
+# TextGrid root defaults to a sibling of the audio root so the two cannot
+# silently diverge; override with TEXTGRID_ROOT.
 _TEXTGRID_ROOT = os.environ.get(
     "TEXTGRID_ROOT",
-    "/home/datasets/LibriSpeech/chunk_textgrids_word_model_final2",
+    os.path.join(_LIBRI_ROOT, "chunk_textgrids_word_model_final2"),
 )
 
 # Cache root for precomputed CosyVoice3 features (mirrors LibriTTS layout).
 _FEATURE_CACHE_ROOT = os.environ.get(
     "COSYVOICE_FEATURE_CACHE_ROOT",
     os.path.join(
-        os.environ.get("STREAMASR_ROOT", "/home/streamalign/streamASR"),
+        os.environ.get(
+            "STREAMASR_ROOT",
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        ),
         "cache",
         "cosyvoice_features",
     ),
@@ -231,19 +249,32 @@ _FEATURE_CACHE_ROOT = os.environ.get(
 
 
 def _libri_feature_paths(wav_path: str):
-    """(speech_tokens.pt, spk_emb.pt) under _FEATURE_CACHE_ROOT for a LibriTTS wav."""
-    rel = os.path.relpath(wav_path, _LIBRI_ROOT)
+    """(speech_tokens.pt, spk_emb.pt) under _FEATURE_CACHE_ROOT for a LibriTTS wav.
+
+    The cache mirrors the layout written by
+    scripts/precompute/precompute_speech_tokens.py, which relpaths against
+    its --data_root (the LibriTTS root) — so resolve against _LIBRITTS_ROOT.
+    """
+    rel = os.path.relpath(wav_path, _LIBRITTS_ROOT)
     if rel.endswith(".flac"):
         rel = rel[:-5] + ".wav"
     base = os.path.join(_FEATURE_CACHE_ROOT, rel)
     return base + ".speech_tokens.pt", base + ".spk_emb.pt"
 
 
+# TextGrid root for LibriTTS training wavs (generate_textgrids.sh default
+# output). A run reading LibriSpeech instead sets TEXTGRID_ROOT explicitly.
+_LIBRITTS_TEXTGRID_ROOT = os.environ.get(
+    "TEXTGRID_ROOT",
+    os.path.join(_LIBRITTS_ROOT, "chunk_textgrids_word_model_final2"),
+)
+
+
 def _get_textgrid_path(wav_path: str) -> str:
-    """Return the corresponding chunk_textgrids_word_model TextGrid path for a wav."""
-    rel = os.path.relpath(wav_path, _LIBRI_ROOT)         # e.g. train-clean-100/103/1241/103_1241_000000_000001.wav
+    """Return the corresponding chunk TextGrid path for a LibriTTS wav."""
+    rel = os.path.relpath(wav_path, _LIBRITTS_ROOT)      # e.g. train-clean-100/103/1241/....wav
     stem = rel.rsplit(".", 1)[0]                          # strip .wav
-    return os.path.join(_TEXTGRID_ROOT, stem + ".TextGrid")
+    return os.path.join(_LIBRITTS_TEXTGRID_ROOT, stem + ".TextGrid")
 
 
 class LibriTTSDataset(Dataset):
@@ -267,6 +298,7 @@ class LibriTTSDataset(Dataset):
         return len(self.wavpaths)
 
     def __getitem__(self, idx):
+        cache_misses = 0
         while True:
             try:
                 wav_path = self.wavpaths[idx]
@@ -275,6 +307,14 @@ class LibriTTSDataset(Dataset):
                 if self.use_precomputed_features:
                     tok_path, spk_path = _libri_feature_paths(wav_path)
                     if not (os.path.exists(tok_path) and os.path.exists(spk_path)):
+                        cache_misses += 1
+                        if cache_misses >= 1000:
+                            raise RuntimeError(
+                                f"{cache_misses} consecutive precomputed-feature cache "
+                                f"misses (last: {tok_path}). The CosyVoice feature cache "
+                                "is missing — run scripts/precompute/ first, or check "
+                                "COSYVOICE_FEATURE_CACHE_ROOT / LIBRITTS_ROOT."
+                            )
                         idx = random.randint(0, len(self.wavpaths) - 1)
                         continue
                     speech_tokens = torch.load(tok_path, map_location="cpu").long()
@@ -312,16 +352,69 @@ class LibriTTSDataset(Dataset):
                     item["speech_tokens"] = speech_tokens
                     item["spk_emb"] = spk_emb
                 return item
+            except RuntimeError:
+                raise  # fail loudly on an all-miss feature cache
             except Exception as e:
                 print(f"Skipping file at index {idx} due to error: {e}")
 
             idx = random.randint(0, len(self.wavpaths) - 1)
 
+class LibriSpeechFlacDataset(Dataset):
+    """LibriSpeech .flac dataset with chunk-level TextGrid alignments.
+
+    Mirrors LibriTTSDataset, but reads the LibriSpeech flac layout and
+    resolves TextGrids against ``_TEXTGRID_ROOT`` relative to the
+    LibriSpeech root (``LIBRISPEECH_ROOT``).
+    """
+
+    def __init__(self, wavpaths):
+        super().__init__()
+        self.wavpaths = wavpaths
+
+    def __len__(self):
+        return len(self.wavpaths)
+
+    def __getitem__(self, idx):
+        while True:
+            try:
+                wav_path = self.wavpaths[idx]
+                waveform, sr = torchaudio.load(wav_path)
+                duration_sec = waveform.shape[-1] / sr
+                if waveform.size(0) > 1:
+                    waveform = waveform.mean(0)
+                else:
+                    waveform = waveform.squeeze(0)
+                if duration_sec > 30:
+                    idx = random.randint(0, len(self.wavpaths) - 1)
+                    continue
+
+                rel = os.path.relpath(wav_path, _LIBRISPEECH_ROOT)
+                tg_path = os.path.join(
+                    _TEXTGRID_ROOT, rel.rsplit(".", 1)[0] + ".TextGrid"
+                )
+                textgrid_intervals = None
+                if os.path.exists(tg_path):
+                    from utils.rnnt_align_loss import parse_textgrid_words
+                    textgrid_intervals = parse_textgrid_words(tg_path)
+
+                return {
+                    "source": "libri",
+                    "waveform": waveform,
+                    "sampling_rate": sr,
+                    "wav_path": wav_path,
+                    "textgrid_intervals": textgrid_intervals,
+                }
+            except Exception as e:
+                print(f"Skipping file at index {idx} due to error: {e}")
+
+            idx = random.randint(0, len(self.wavpaths) - 1)
+
+
 class EmiliaDataset(Dataset):
     def __init__(self, wavpaths):
         super().__init__()
         self.wavpaths = wavpaths
-        self.base_path = os.environ.get("EMILIA_ROOT", "/home/datasets/Emilia")
+        self.base_path = os.environ.get("EMILIA_ROOT", "/data/Emilia")
 
     def __len__(self):
         return len(self.wavpaths)
@@ -365,7 +458,7 @@ class EmiliaDataset(Dataset):
 
 # ── Emilia (TextGrid-based) ──────────────────────────────────────────────────
 
-_EMILIA_ROOT = os.environ.get("EMILIA_ROOT", "/home/datasets/Emilia")
+_EMILIA_ROOT = os.environ.get("EMILIA_ROOT", "/data/Emilia")
 _EMILIA_TEXTGRID_ROOT = os.environ.get(
     "EMILIA_TEXTGRID_ROOT",
     os.path.join(_EMILIA_ROOT, "chunk_textgrids_word_model_final2"),
@@ -405,6 +498,7 @@ class EmiliaTextGridDataset(Dataset):
         return len(self.wavpaths)
 
     def __getitem__(self, idx):
+        cache_misses = 0
         while True:
             try:
                 wav_path = self.wavpaths[idx]
@@ -413,6 +507,14 @@ class EmiliaTextGridDataset(Dataset):
                 if self.use_precomputed_features:
                     tok_path, spk_path = _emilia_feature_paths(wav_path)
                     if not (os.path.exists(tok_path) and os.path.exists(spk_path)):
+                        cache_misses += 1
+                        if cache_misses >= 1000:
+                            raise RuntimeError(
+                                f"{cache_misses} consecutive precomputed-feature cache "
+                                f"misses (last: {tok_path}). The Emilia feature cache is "
+                                "missing — run scripts/precompute/ first, or check "
+                                "EMILIA_ROOT / the emilia cache root."
+                            )
                         idx = random.randint(0, len(self.wavpaths) - 1)
                         continue
                     speech_tokens = torch.load(tok_path, map_location="cpu").long()
@@ -449,6 +551,8 @@ class EmiliaTextGridDataset(Dataset):
                     item["speech_tokens"] = speech_tokens
                     item["spk_emb"] = spk_emb
                 return item
+            except RuntimeError:
+                raise  # fail loudly on an all-miss feature cache
             except Exception as e:
                 print(f"Skipping Emilia file at index {idx} due to error: {e}")
                 idx = random.randint(0, len(self.wavpaths) - 1)

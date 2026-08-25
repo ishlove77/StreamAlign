@@ -12,7 +12,7 @@ Run sharded for parallelism:
         --dataset libritts --split train-clean-100 \
         --rank 0 --world_size 8 \
         --variant rvq \
-        --checkpoint /home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt \
+        --checkpoint weights/Streamalign-R16/rvq_teacher/epoch_22.pt \
         --cache_root cache/streamSLM_units
 """
 
@@ -41,7 +41,9 @@ from torch.utils.data import DataLoader, Subset
 # scripts do, so a user only needs to invoke this module from the repo root.
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _STREAMASR_ROOT = os.path.join(_REPO_ROOT, "streamASR")
-_COSYVOICE_ROOT = "/home/CosyVoice"
+_COSYVOICE_ROOT = os.environ.get(
+    "COSYVOICE_ROOT", os.path.join(_STREAMASR_ROOT, "third_party", "CosyVoice")
+)
 for p in [
     os.path.join(_STREAMASR_ROOT, "third_party", "Matcha-TTS"),
     os.path.join(_COSYVOICE_ROOT, "third_party", "Matcha-TTS"),
@@ -59,7 +61,7 @@ from transformers import AutoTokenizer  # noqa: E402
 from utils.data_utils_cosyvoice import (  # noqa: E402
     LibriTTSDataset, LibriSpeechFlacDataset, EmiliaTextGridDataset,
     unified_collate_fn,
-    _LIBRI_ROOT, _LIBRISPEECH_ROOT, _EMILIA_ROOT, load_emilia_wavpaths,
+    _LIBRITTS_ROOT, _LIBRISPEECH_ROOT, _EMILIA_ROOT, load_emilia_wavpaths,
 )
 from utils.train_utils import preprocess_batch  # noqa: E402
 
@@ -129,9 +131,9 @@ def _build_dataset(dataset: str, split: str, emilia_csv: str = ""):
       - emilia_csv == ""  : a single Emilia subdir, e.g. "EN-B000062".
     """
     if dataset == "libritts":
-        root = Path(_LIBRI_ROOT) / split
+        root = Path(_LIBRITTS_ROOT) / split
         wavpaths = sorted(str(p) for p in root.rglob("*.wav"))
-        return LibriTTSDataset(wavpaths, use_precomputed_features=False), _LIBRI_ROOT
+        return LibriTTSDataset(wavpaths, use_precomputed_features=False), _LIBRITTS_ROOT
     if dataset == "librispeech":
         root = Path(_LIBRISPEECH_ROOT) / split
         wavpaths = sorted(str(p) for p in root.rglob("*.flac"))
@@ -161,17 +163,17 @@ def main():
     ap.add_argument("--variant", choices=["rvq"], default="rvq")
     ap.add_argument("--checkpoint", required=True, help="StreamAlign student-model .pt")
     ap.add_argument("--hparams", default=
-                    "/home/streamalign/streamASR/hparams/alignment.yaml")
+                    os.environ.get("ASR_HPARAMS", os.path.join(_STREAMASR_ROOT, "hparams", "alignment.yaml")))
     # Truth-model paired with alignment.yaml. Every current training/inference
     # script (run_inference_subset.sh, run_train_rvq_example.sh, run_exp*_*.sh,
     # run_inference_mimi_decoder.sh, …) uses char_asr_ckpt.
     # The 02-11 default in inference_core.py is stale (vocab=29 vs 73).
     ap.add_argument("--truthmodel_checkpoint_path", default=
-                    "/home/streamalign/streamASR/results/char_asr_ckpt")
+                    os.environ.get("TRUTH_MODEL_CKPT", os.path.join(_STREAMASR_ROOT, "results", "char_asr_ckpt")))
     ap.add_argument("--chunk_size", type=int, default=16)
     ap.add_argument("--left_context", type=int, default=8)
     ap.add_argument("--cosyvoice_model_dir", default=
-                    "/home/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B")
+                    os.path.join(_COSYVOICE_ROOT, "pretrained_models", "Fun-CosyVoice3-0.5B"))
     ap.add_argument("--tokenizer", choices=["llama", "qwen3"], default="llama")
     ap.add_argument("--cache_root", required=True)
     ap.add_argument("--rank", type=int, default=0)
