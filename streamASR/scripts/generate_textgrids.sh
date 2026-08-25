@@ -19,14 +19,22 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# ---- environment (override via env) ----------------------------------------
+PYTHON=${PYTHON:-python}
+LIBRITTS_ROOT=${LIBRITTS_ROOT:?set LIBRITTS_ROOT to your LibriTTS root}
+WORD_ASR_CKPT=${WORD_ASR_CKPT:-${SCRIPT_DIR}/train/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt}
+TEXTGRID_ROOT=${TEXTGRID_ROOT:-${LIBRITTS_ROOT}/chunk_textgrids_word_model_final2}
+# ----------------------------------------------------------------------------
+
 # ── Defaults ─────────────────────────────────────────────────────────────────
-DATA_DIR="/home/datasets/LibriTTS"
+DATA_DIR="${LIBRITTS_ROOT}"
 WORD_HPARAMS="${SCRIPT_DIR}/hparams/chunk_streaming_word_fastemit.yaml"
-WORD_CKPT="${SCRIPT_DIR}/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt"
-TG_DIR="${DATA_DIR}/chunk_textgrids_word_model_final2"
+WORD_CKPT="${WORD_ASR_CKPT}"
+TG_DIR="${TEXTGRID_ROOT}"
 CHUNK_SIZE=4
 LEFT_CONTEXT=32
-SPLITS="dev-clean test-clean"
+SPLITS="${SPLITS:-dev-clean test-clean}"
 MAX_FILES_ARG=""
 OVERWRITE_ARG=""
 EMILIA_CSV=""
@@ -43,9 +51,10 @@ while [[ $# -gt 0 ]]; do
         --chunk-size)  CHUNK_SIZE="$2"; shift 2 ;;
         --left-context) LEFT_CONTEXT="$2"; shift 2 ;;
         --emilia)
-            EMILIA_CSV="/home/datasets/Emilia/emilia_en_400h.csv"
-            DATA_ROOT_ARG="--data_root /home/datasets/Emilia"
-            TG_DIR="/home/datasets/Emilia/chunk_textgrids_word_model_final2"
+            EMILIA_ROOT="${EMILIA_ROOT:?set EMILIA_ROOT to your Emilia dataset root}"
+            EMILIA_CSV="${EMILIA_CSV:-${EMILIA_ROOT}/emilia_en_400h.csv}"
+            DATA_ROOT_ARG="--data_root ${EMILIA_ROOT}"
+            TG_DIR="${EMILIA_TEXTGRID_ROOT:-${EMILIA_ROOT}/chunk_textgrids_word_model_final2}"
             shift ;;
         --emilia-csv)  EMILIA_CSV="$2"; shift 2 ;;
         --data-root)   DATA_ROOT_ARG="--data_root $2"; shift 2 ;;
@@ -76,7 +85,7 @@ echo "========================================================"
 if [[ "${NGPUS}" -le 1 ]]; then
     # ── Single-GPU mode ──────────────────────────────────────────────────────
     # shellcheck disable=SC2086
-    python "${SCRIPT_DIR}/data/generate_chunk_textgrids.py" \
+    "${PYTHON}" "${SCRIPT_DIR}/data/generate_chunk_textgrids.py" \
         --hparams_file  "${WORD_HPARAMS}"   \
         --checkpoint    "${WORD_CKPT}"      \
         --input_dir     "${DATA_DIR}"       \
@@ -95,7 +104,7 @@ else
         echo "Launching rank ${RANK}/${NGPUS} on GPU ${RANK} ..."
         # shellcheck disable=SC2086
         CUDA_VISIBLE_DEVICES="${RANK}" \
-        python "${SCRIPT_DIR}/data/generate_chunk_textgrids.py" \
+        "${PYTHON}" "${SCRIPT_DIR}/data/generate_chunk_textgrids.py" \
             --hparams_file  "${WORD_HPARAMS}"   \
             --checkpoint    "${WORD_CKPT}"      \
             --input_dir     "${DATA_DIR}"       \

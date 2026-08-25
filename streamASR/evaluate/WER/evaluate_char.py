@@ -3,9 +3,9 @@
 Streaming Evaluation Char Version.
 
 Usage:
-    python evaluate_char.py /home/streamalign/streamASR/hparams/chunk_streaming_char.yaml \
-        --checkpoint_path /home/streamalign/streamASR/results/char_asr_ckpt \
-        --test_csv /home/datasets/LibriSpeech/csv/test-clean.csv \
+    python evaluate_char.py <streamASR>/hparams/chunk_streaming_char.yaml \
+        --checkpoint_path <streamASR>/results/char_asr_ckpt \
+        --test_csv <LIBRISPEECH_ROOT>/csv/test-clean.csv \
         --num_samples 10
 """
 

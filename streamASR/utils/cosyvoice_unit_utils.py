@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import os
 import random
 import sys
 from contextlib import nullcontext
@@ -21,12 +22,15 @@ from utils.data_utils_cosyvoice import LibriSpeechCSVDataset, unified_collate_fn
 from utils.text_utils import PAD_ID
 from utils.train_utils_cosyvoice import preprocess_batch
 
-DEFAULT_COSYVOICE_MODEL_DIR = (
-    "/home/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B"
+_COSYVOICE_ROOT = os.environ.get(
+    "COSYVOICE_ROOT", str(STREAM_ASR_ROOT / "third_party" / "CosyVoice")
 )
-DEFAULT_LIBRISPEECH_ROOT = "/home/datasets/LibriSpeech"
-DEFAULT_LIBRISPEECH_TEST_CSV = (
-    "/home/datasets/LibriSpeech/csv/test-clean.csv"
+DEFAULT_COSYVOICE_MODEL_DIR = os.path.join(
+    _COSYVOICE_ROOT, "pretrained_models", "Fun-CosyVoice3-0.5B"
+)
+DEFAULT_LIBRISPEECH_ROOT = os.environ.get("LIBRISPEECH_ROOT", "/data/LibriSpeech")
+DEFAULT_LIBRISPEECH_TEST_CSV = os.path.join(
+    DEFAULT_LIBRISPEECH_ROOT, "csv", "test-clean.csv"
 )
 DEFAULT_UNIT_SAMPLE_RATE = 24000
 
@@ -84,7 +88,7 @@ def load_cosyvoice_waveform_decoder(
 
     from hyperpyyaml import load_hyperpyyaml
 
-    cosyvoice_root = "/home/CosyVoice"
+    cosyvoice_root = _COSYVOICE_ROOT
     if cosyvoice_root not in sys.path:
         sys.path.insert(0, cosyvoice_root)
 

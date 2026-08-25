@@ -47,8 +47,8 @@ Extra CLI argument
 Usage
 -----
 python train_asr_word_distill.py \\
-    /home/streamalign/streamASR/hparams/chunk_streaming_librispeech.yaml \\
-    [--textgrid_dir /home/datasets/LibriSpeech/chunk_textgrids_word_model]
+    <streamASR>/hparams/chunk_streaming_libritts_distill.yaml \\
+    [--textgrid_dir <LIBRISPEECH_ROOT>/chunk_textgrids_word_model_final2]
 """
 
 import argparse

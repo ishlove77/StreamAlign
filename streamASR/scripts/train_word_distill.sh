@@ -18,10 +18,19 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# ── Defaults ─────────────────────────────────────────────────────────────────
-DATA_DIR="/home/datasets/LibriTTS"
+# ---- environment (override via env) ----------------------------------------
+PYTHON=${PYTHON:-python}
+LIBRITTS_ROOT=${LIBRITTS_ROOT:?set LIBRITTS_ROOT to your LibriTTS root}
+LIBRISPEECH_ROOT=${LIBRISPEECH_ROOT:?set LIBRISPEECH_ROOT to your LibriSpeech root}
+EMILIA_ROOT=${EMILIA_ROOT:?set EMILIA_ROOT to your Emilia dataset root}
+EMILIA_CSV=${EMILIA_CSV:-${EMILIA_ROOT}/emilia_en_400h.csv}
+# TextGrids from generate_textgrids.sh (LibriTTS) and its --emilia run.
+TEXTGRID_ROOT=${TEXTGRID_ROOT:-${LIBRITTS_ROOT}/chunk_textgrids_word_model_final2}
+EMILIA_TEXTGRID_ROOT=${EMILIA_TEXTGRID_ROOT:-${EMILIA_ROOT}/chunk_textgrids_word_model_final2}
+# ----------------------------------------------------------------------------
+
 CHAR_HPARAMS="${SCRIPT_DIR}/hparams/chunk_streaming_libritts_distill.yaml"
-TG_DIR="${DATA_DIR}/chunk_textgrids_word_model_final2"
+TG_DIR="${TEXTGRID_ROOT}"
 GPU_ARG=""
 
 # ── Argument parsing ─────────────────────────────────────────────────────────
@@ -39,10 +48,19 @@ echo "  Char model : ${CHAR_HPARAMS}"
 echo "  TextGrid   : ${TG_DIR}"
 echo "========================================================"
 
+# Yaml output paths are relative; run from train/ so results land under
+# streamASR/train/results/ (the canonical location).
+cd "${SCRIPT_DIR}/train"
+
 # shellcheck disable=SC2086
-python "${SCRIPT_DIR}/train/train_asr_word_distill.py" \
+"${PYTHON}" "${SCRIPT_DIR}/train/train_asr_word_distill.py" \
     "${CHAR_HPARAMS}"              \
     --textgrid_dir "${TG_DIR}"     \
+    --data_folder "${LIBRITTS_ROOT}" \
+    --valid_data_folder "${LIBRISPEECH_ROOT}" \
+    --emilia_data_folder "${EMILIA_ROOT}" \
+    --emilia_train_csv "${EMILIA_CSV}" \
+    --emilia_textgrid_dir "${EMILIA_TEXTGRID_ROOT}" \
     ${GPU_ARG}
 
 echo ""

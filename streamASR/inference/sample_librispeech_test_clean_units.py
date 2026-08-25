@@ -24,7 +24,11 @@ from utils.cosyvoice_unit_utils import (
     save_librispeech_test_clean_unit_examples,
 )
 
-sys.path.insert(0, "/home/CosyVoice")
+sys.path.insert(0, os.environ.get(
+    "COSYVOICE_ROOT",
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                 "third_party", "CosyVoice"),
+))
 from cosyvoice.cli.frontend import CosyVoiceFrontEnd
 
 

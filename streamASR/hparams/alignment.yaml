@@ -1,5 +1,5 @@
 # Generated 2026-02-02 from:
-# /home/streamalign/streamASR/hparams/train_chunk_streaming.yaml
+# the original chunk-streaming training yaml
 # yamllint disable
 # ############################################################################
 # Model: E2E ASR with Conformer Transducer (Character-level)
@@ -20,7 +20,9 @@ save_folder: results/conformer_transducer_char/alignment/save
 train_log: results/conformer_transducer_char/alignment/train_log.txt
 
 # Data files
-data_folder: /home/datasets/LibriTTS
+# Model-definition yaml; data_folder is unused at inference. Override with
+# --data_folder if a consumer needs it.
+data_folder: /data/LibriTTS
 
 # Files to hold the manifest data
 train_json: !ref <save_folder>/train.json

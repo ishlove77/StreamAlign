@@ -21,7 +21,7 @@ pretrain_source: speechbrain/asr-streaming-conformer-librispeech
 pretrain_folder: results/conformer_transducer_char/word_asr/pretrained
 
 # Data files
-data_folder: /home/datasets/LibriSpeech
+data_folder: /data/LibriSpeech
 
 # CSV files (LibriSpeech, written by the char_asr data-prep run)
 train_csv:

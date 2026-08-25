@@ -420,6 +420,8 @@ def parse_args():
                    help="Path to boundary_classifier.yaml")
     p.add_argument("--max_files_per_split", type=int, default=None,
                    help="Limit files per split (for quick testing).")
+    p.add_argument("--data_folder", type=str, default=None,
+                   help="LibriSpeech root; overrides the yaml's data_folder.")
     p.add_argument("--tokenizer_ckpt", type=str, default=None,
                    help="Override tokenizer.ckpt path.")
     return p.parse_args()
@@ -436,6 +438,8 @@ def main():
 
     if args.tokenizer_ckpt:
         hparams["tokenizer_ckpt"] = args.tokenizer_ckpt
+    if args.data_folder:
+        hparams["data_folder"] = args.data_folder
 
     # ── Load frozen ASR model ─────────────────────────────────────────────
     print("Loading frozen ASR model …")

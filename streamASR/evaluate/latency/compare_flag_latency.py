@@ -31,6 +31,8 @@ import csv
 import logging
 import os
 import sys
+
+_STREAMASR_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import traceback
 from pathlib import Path
 from typing import Dict, List
@@ -63,24 +65,24 @@ def parse_args():
         description="Compare streaming latency: flag=False vs flag=True"
     )
     p.add_argument("--hparams_file",
-                   default="/home/streamalign/streamASR/hparams/chunk_streaming_word_fastemit.yaml")
+                   default=os.path.join(_STREAMASR_ROOT, "hparams", "chunk_streaming_word_fastemit.yaml"))
     p.add_argument("--checkpoint", type=str,
-                   default="/home/streamalign/streamASR/train/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt")
+                   default=os.environ.get("WORD_ASR_CKPT", os.path.join(_STREAMASR_ROOT, "train", "results", "conformer_transducer_char", "word_fastemit", "save", "word_asr_ckpt")))
     p.add_argument("--chunk_size", type=int, default=4)
     p.add_argument("--left_context", type=int, default=32)
     p.add_argument("--input_dir",
-                   default="/home/datasets/LibriSpeech")
+                   default=os.environ.get("LIBRISPEECH_ROOT", "/data/LibriSpeech"))
     p.add_argument("--split", default="test-clean")
     p.add_argument("--max_files", type=int, default=None)
     p.add_argument("--output_dir", type=str,
-                   default="/home/streamalign/streamASR/evaluate/latency/compare_results",
+                   default=os.path.join(_STREAMASR_ROOT, "evaluate", "latency", "compare_results"),
                    help="Directory for output files (text.txt, latency CSVs).")
     p.add_argument("--csv_dir", type=str,
-                   default="/home/datasets/LibriSpeech/csv")
+                   default=os.path.join(os.environ.get("LIBRISPEECH_ROOT", "/data/LibriSpeech"), "csv"))
     p.add_argument("--tokenizer_ckpt", type=str,
-                   default="/home/streamalign/streamASR/train/results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt")
+                   default=os.path.join(_STREAMASR_ROOT, "train", "results", "conformer_transducer_char", "word_fastemit", "pretrained", "tokenizer.ckpt"))
     p.add_argument("--boundary_classifier_ckpt", type=str,
-                   default="/home/streamalign/streamASR/train/results/best_model.pt")
+                   default=os.environ.get("BOUNDARY_CKPT", os.path.join(_STREAMASR_ROOT, "train", "results", "boundary_classifier", "save", "best_model.pt")))
     return p.parse_args()
 
 

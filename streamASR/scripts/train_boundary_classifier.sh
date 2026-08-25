@@ -13,6 +13,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON=${PYTHON:-python}
+
+# Relative paths in the yaml resolve against the streamASR root.
+cd "${SCRIPT_DIR}"
 
 # ── Defaults ─────────────────────────────────────────────────────────────────
 HPARAMS="${SCRIPT_DIR}/hparams/boundary_classifier.yaml"
@@ -35,7 +39,7 @@ echo "  Hparams : ${HPARAMS}"
 echo "========================================================"
 
 # shellcheck disable=SC2086
-env ${GPU_ARG} python "${SCRIPT_DIR}/train/train_boundary_classifier.py" \
+env ${GPU_ARG} "${PYTHON}" "${SCRIPT_DIR}/train/train_boundary_classifier.py" \
     "${HPARAMS}"    \
     ${NO_RESUME_ARG}
 

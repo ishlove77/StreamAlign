@@ -28,7 +28,7 @@ def _resolve_data_path(path_value: str, data_folder: str) -> str:
 
     legacy_roots = os.environ.get(
         "LEGACY_SPEECH_DATA_ROOTS",
-        "/home/datasets/LibriSpeech:/home/datasets/LibriTTS",
+        "/data/LibriSpeech:/data/LibriTTS",
     ).split(":")
     for legacy_root in legacy_roots:
         legacy_root = os.path.normpath(legacy_root)
@@ -200,7 +200,8 @@ class LibriSpeechCSVDataset(Dataset):
 
                 tg_root = os.environ.get(
                     "TEXTGRID_ROOT",
-                    "/home/datasets/LibriSpeech/chunk_textgrids_word_model_final2",
+                    os.path.join(self.data_folder,
+                                 "chunk_textgrids_word_model_final2"),
                 )
                 rel = os.path.relpath(wav_path, self.data_folder)
                 tg_path = os.path.join(tg_root, rel.rsplit(".", 1)[0] + ".TextGrid")
@@ -222,8 +223,10 @@ class LibriSpeechCSVDataset(Dataset):
 
             idx = random.randint(0, len(self.samples) - 1)
 
-_LIBRI_ROOT = "/home/datasets/LibriTTS"
-_TEXTGRID_ROOT = "/home/datasets/LibriTTS/chunk_textgrids_word_model"
+_LIBRI_ROOT = os.environ.get("LIBRITTS_ROOT", "/data/LibriTTS")
+_TEXTGRID_ROOT = os.environ.get(
+    "TEXTGRID_ROOT", os.path.join(_LIBRI_ROOT, "chunk_textgrids_word_model")
+)
 
 
 def _get_textgrid_path(wav_path: str) -> str:
@@ -287,7 +290,7 @@ class EmiliaDataset(Dataset):
     def __init__(self, wavpaths):
         super().__init__()
         self.wavpaths = wavpaths
-        self.base_path = "/home/datasets/Emilia-Dataset"
+        self.base_path = os.environ.get("EMILIA_ROOT", "/data/Emilia")
 
     def __len__(self):
         return len(self.wavpaths)

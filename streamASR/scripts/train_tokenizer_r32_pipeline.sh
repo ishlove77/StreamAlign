@@ -59,19 +59,27 @@ export PYTHONPATH="${STREAMASR_ROOT}:${PYTHONPATH:-}"
 export RVQ_R RVQ_CODEBOOK_SIZE COMMIT_WEIGHT
 unset RVQ_CODEBOOK_DIM 2>/dev/null || true   # codebook_dim = feat_dim (256)
 
-# ---- Data / checkpoint paths (edit for your machine) ------------------------
+# ---- Data / checkpoint paths (override via env) -----------------------------
+: "${PYTHON:=python}"
+# TRUTH_CKPT: point (or symlink results/char_asr_ckpt) at your best char-ASR
+# SpeechBrain checkpoint dir (train/results/conformer_transducer_char/char_asr/save/CKPT+...).
 : "${TRUTH_CKPT:=${STREAMASR_ROOT}/results/char_asr_ckpt}"  # Stage-1 char RNN-T CKPT dir
 : "${HPARAMS:=${STREAMASR_ROOT}/hparams/alignment.yaml}"
-: "${LIBRI_ROOT:=/home/datasets/LibriSpeech}"
-: "${EMILIA_CSV:=/home/datasets/Emilia/emilia_en_400h.csv}"
-: "${EMILIA_ROOT:=/home/datasets/Emilia}"
+: "${LIBRISPEECH_ROOT:?set LIBRISPEECH_ROOT to your LibriSpeech root}"
+: "${LIBRITTS_ROOT:?set LIBRITTS_ROOT to your LibriTTS root}"
+: "${EMILIA_ROOT:?set EMILIA_ROOT to your Emilia dataset root}"
+: "${EMILIA_CSV:=${EMILIA_ROOT}/emilia_en_400h.csv}"
+: "${TEXTGRID_ROOT:=${LIBRITTS_ROOT}/chunk_textgrids_word_model_final2}"
+: "${COSYVOICE_ROOT:=${STREAMASR_ROOT}/third_party/CosyVoice}"
 # eval-only: reused word/BPE streaming ASR + its tokenizer + boundary clf
-: "${WORD_ASR_CKPT:=${STREAMASR_ROOT}/results/word_fastemit/save/CKPT}"
-: "${WORD_TOKENIZER_CKPT:=${STREAMASR_ROOT}/results/word_fastemit/pretrained/tokenizer.ckpt}"
-: "${BOUNDARY_CKPT:=${STREAMASR_ROOT}/train/results/boundary_classifier_h200/save/best_model.pt}"
+: "${WORD_ASR_CKPT:=${STREAMASR_ROOT}/train/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt}"
+: "${WORD_TOKENIZER_CKPT:=${STREAMASR_ROOT}/train/results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt}"
+: "${BOUNDARY_CKPT:=${STREAMASR_ROOT}/train/results/boundary_classifier/save/best_model.pt}"
 : "${MASTER_PORT:=29663}"
+# Exported: the trainers / utils read these names from the environment.
+export LIBRISPEECH_ROOT LIBRITTS_ROOT EMILIA_ROOT TEXTGRID_ROOT COSYVOICE_ROOT
 
-NUM_GPUS="${NUM_GPUS:-$(python -c "import torch; print(max(1, torch.cuda.device_count()))")}"
+NUM_GPUS="${NUM_GPUS:-$("${PYTHON}" -c "import torch; print(max(1, torch.cuda.device_count()))")}"
 cd "${STREAMASR_ROOT}"
 
 # Global batch 16 reproduced the paper (4 GPU x bs4 or 8 GPU x bs2).
@@ -88,6 +96,7 @@ common_args=(
     --emilia_sample_ratio=0.1
     --emilia_csv="${EMILIA_CSV}"
     --emilia_data_root="${EMILIA_ROOT}"
+    --data_root="${LIBRITTS_ROOT}"
     --use_precomputed_features
 )
 
@@ -101,14 +110,48 @@ case "${STAGE}" in
 
   char_asr)
     # Stage 1: char-level RNN-T aligner (torchaudio RNN-T backend).
+    # Yaml output paths are relative; run from train/ so results land under
+    # streamASR/train/results/ (the canonical location).
+    cd "${STREAMASR_ROOT}/train"
+    # Prep the LibriSpeech CSVs first (skipped if they already exist).
+    CSV_DIR="results/conformer_transducer_char/char_asr"
+    if [[ ! -f "${CSV_DIR}/train-clean-100.csv" ]]; then
+      echo "[prep] generating LibriSpeech CSVs under ${CSV_DIR}"
+      "${PYTHON}" -c "
+import os
+from utils.librispeech_prepare import prepare_librispeech
+root = '${LIBRISPEECH_ROOT}'
+def have(splits):
+    kept = [s for s in splits if os.path.isdir(os.path.join(root, s))]
+    for s in set(splits) - set(kept):
+        print(f'[prep] split {s} not found under {root}; skipping')
+    return kept
+tr = have(['train-clean-100', 'train-clean-360', 'train-other-500'])
+dev = have(['dev-clean'])
+te = have(['test-clean', 'test-other'])
+# Optional smoke knob: cap sentences per split (0/unset = all).
+n = int(os.environ.get('LIBRISPEECH_PREP_N', '0'))
+prepare_librispeech(
+    data_folder=root,
+    save_folder='${CSV_DIR}',
+    tr_splits=tr,
+    dev_splits=dev,
+    te_splits=te,
+    select_n_sentences=([n] * len(tr + dev + te) if n else None),
+)
+"
+    fi
     exec torchrun --nproc_per_node="${NUM_GPUS}" --master_port="${MASTER_PORT}" \
-        train/train_asr_char.py hparams/chunk_streaming_char_h200.yaml --precision=fp16
+        "${STREAMASR_ROOT}/train/train_asr_char.py" \
+        "${STREAMASR_ROOT}/hparams/chunk_streaming_char_h200.yaml" \
+        --data_folder "${LIBRISPEECH_ROOT}" --precision=fp16
     ;;
 
   boundary)
     # Boundary classifier: dataset extraction, then training.
-    python data/create_boundary_dataset.py hparams/boundary_classifier_h200.yaml
-    exec python train/train_boundary_classifier.py hparams/boundary_classifier_h200.yaml
+    "${PYTHON}" data/create_boundary_dataset.py hparams/boundary_classifier_h200.yaml \
+        --data_folder "${LIBRISPEECH_ROOT}"
+    exec "${PYTHON}" train/train_boundary_classifier.py hparams/boundary_classifier_h200.yaml
     ;;
 
   continuous)
@@ -155,9 +198,9 @@ case "${STAGE}" in
     export RVQ_BYPASS="${RVQ_BYPASS:-0}"
     OUT_DIR="${OUT_DIR:-eval_out/$(basename "${CKPT%.pt}")}"
     mkdir -p "${OUT_DIR}"
-    python inference/inference_core.py \
+    "${PYTHON}" inference/inference_core.py \
         --variant=rvq \
-        --input_dir="${LIBRI_ROOT}" \
+        --input_dir="${LIBRISPEECH_ROOT}" \
         --output_dir="${OUT_DIR}/recon" \
         --split=test-clean --output_split=test-clean \
         --batch_size=1 \
@@ -172,7 +215,7 @@ case "${STAGE}" in
         --boundary_classifier_ckpt="${BOUNDARY_CKPT}" \
         --world_size=1 --tokenizer="${TOKENIZER:-llama}" \
         --streamability=true --resume=true
-    OUT_DIR="${OUT_DIR}" python - <<'PY'
+    OUT_DIR="${OUT_DIR}" "${PYTHON}" - <<'PY'
 # Pair reconstructed flacs with reference transcripts -> recon.csv
 import csv, glob, os
 out_dir = os.environ["OUT_DIR"]
@@ -189,7 +232,7 @@ with open(os.path.join(out_dir, "recon.csv"), "w", newline="") as f:
     w.writeheader(); w.writerows(rows)
 print(f"[recon_csv] wrote {len(rows)} rows")
 PY
-    exec python evaluate/WER/evaluate_word_whisper.py \
+    exec "${PYTHON}" evaluate/WER/evaluate_word_whisper.py \
         --test_csv="${OUT_DIR}/recon.csv" --model=openai/whisper-large-v3 \
         --num_samples=2620 --hyps_out="${OUT_DIR}/wer_hyps.json"
     ;;

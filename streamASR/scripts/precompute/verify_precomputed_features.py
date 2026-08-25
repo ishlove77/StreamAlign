@@ -18,7 +18,7 @@ if _STREAMASR_ROOT not in sys.path:
 
 from utils.data_utils_cosyvoice import _libri_feature_paths
 
-_LIBRI_ROOT = "/home/datasets/LibriTTS"
+_LIBRI_ROOT = os.environ.get("LIBRITTS_ROOT", "/data/LibriTTS")
 _DEFAULT_DATASETS = ["train-clean-100", "train-clean-360", "train-other-500", "dev-clean"]
 
 

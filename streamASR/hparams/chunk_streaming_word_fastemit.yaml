@@ -21,9 +21,11 @@ pretrain_source: speechbrain/asr-streaming-conformer-librispeech
 pretrain_folder: results/conformer_transducer_char/word_fastemit/pretrained
 
 # Data files
-data_folder: /home/datasets/LibriSpeech
-emilia_data_folder: /home/datasets/Emilia-Dataset/Emilia/EN
-emilia_train_csv: /home/datasets/Emilia/emilia_en_400h.csv
+# Overridden by the launcher with --data_folder "${LIBRISPEECH_ROOT}".
+data_folder: /data/LibriSpeech
+# Overridden by the launcher with --emilia_data_folder "${EMILIA_ROOT}".
+emilia_data_folder: /data/Emilia/EN
+emilia_train_csv: /data/Emilia/emilia_en_400h.csv
 
 # CSV files (LibriSpeech, written by the char_asr data-prep run)
 train_csv:

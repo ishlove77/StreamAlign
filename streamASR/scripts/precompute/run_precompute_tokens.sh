@@ -5,24 +5,29 @@
 # Launches one worker per GPU in parallel.
 #
 # Usage:
-#   sr 4 48 bash run_precompute_tokens.sh          # 4 GPUs, 48GB each
-#   sr 8 48 bash run_precompute_tokens.sh          # 8 GPUs
+#   bash run_precompute_tokens.sh          # CPU-only ONNX workers
 # ============================================================================
 
 set -euo pipefail
 
 STREAMASR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-COSYVOICE_ROOT="/home/CosyVoice"
+COSYVOICE_ROOT="${COSYVOICE_ROOT:-${STREAMASR_ROOT}/third_party/CosyVoice}"
+export COSYVOICE_ROOT
 
 export PYTHONPATH="${STREAMASR_ROOT}/third_party/Matcha-TTS:${COSYVOICE_ROOT}/third_party/Matcha-TTS:${COSYVOICE_ROOT}:${STREAMASR_ROOT}:${PYTHONPATH:-}"
 
+# ---- environment (override via env) ----------------------------------------
+LIBRITTS_ROOT=${LIBRITTS_ROOT:?set LIBRITTS_ROOT to your LibriTTS root}
+export LIBRITTS_ROOT
+LOG_DIR="${LOG_DIR:-${STREAMASR_ROOT}/logs/precompute}"
+mkdir -p "${LOG_DIR}"
+# ----------------------------------------------------------------------------
+
 # Use more workers since ONNX runs on CPU — limited by CPU cores, not GPUs
-N_WORKERS=16
+N_WORKERS=${N_WORKERS:-16}
 echo "Launching ${N_WORKERS} parallel workers (CPU-based ONNX)"
 
-PYTHON="/home/miniconda3/envs/streamASR/bin/python"
-_CONDA_ENV="/home/miniconda3/envs/streamASR"
-export LD_LIBRARY_PATH="${_CONDA_ENV}/lib:${LD_LIBRARY_PATH:-}"
+PYTHON="${PYTHON:-python}"
 
 PIDS=()
 for RANK in $(seq 0 $((N_WORKERS - 1))); do
@@ -30,9 +35,10 @@ for RANK in $(seq 0 $((N_WORKERS - 1))); do
         "${STREAMASR_ROOT}/scripts/precompute/precompute_speech_tokens.py" \
         --rank "${RANK}" \
         --world_size "${N_WORKERS}" \
-        >> "/home/precompute_rank${RANK}.log" 2>&1 &
+        --data_root "${LIBRITTS_ROOT}" \
+        >> "${LOG_DIR}/precompute_rank${RANK}.log" 2>&1 &
     PIDS+=($!)
-    echo "  Rank ${RANK} → GPU ${RANK}, PID ${PIDS[-1]}, log: precompute_rank${RANK}.log"
+    echo "  Rank ${RANK} → GPU ${RANK}, PID ${PIDS[-1]}, log: ${LOG_DIR}/precompute_rank${RANK}.log"
 done
 
 echo "Waiting for all workers to finish..."

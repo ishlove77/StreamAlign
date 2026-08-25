@@ -12,7 +12,7 @@ import sys
 
 import torch
 
-_PROD_ROOT = "/home/streamalign/streamASR"
+_PROD_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _PROD_ROOT not in sys.path:
     sys.path.insert(0, _PROD_ROOT)
 

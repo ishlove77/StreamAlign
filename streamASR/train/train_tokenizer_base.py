@@ -89,7 +89,7 @@ def parse_args():
     )
     parser.add_argument(
         "--emilia_data_root", type=str,
-        default=os.environ.get("EMILIA_ROOT", "/home/datasets/Emilia"),
+        default=os.environ.get("EMILIA_ROOT", "/data/Emilia"),
         help="Root directory for Emilia audio (replaces $data_root in CSV).",
     )
     parser.add_argument(
@@ -108,7 +108,7 @@ def parse_args():
     )
     parser.add_argument(
         "--data_root", type=str,
-        default=os.environ.get("LIBRI_DATA_ROOT", "/home/datasets/LibriTTS"),
+        default=os.environ.get("LIBRITTS_ROOT", os.environ.get("LIBRI_DATA_ROOT", "/data/LibriTTS")),
         help="Root containing the train/val split directories (e.g. LibriTTS or LibriSpeech mirror).",
     )
     parser.add_argument(
@@ -172,7 +172,7 @@ def train_regression_model(
     )
 
     noise_aug = NoiseAugmentor(
-        os.environ.get("NOISE_ROOT", "/home/datasets/noise")
+        os.environ.get("NOISE_ROOT", "/data/noise")
     )
 
     if args.use_precomputed_features:

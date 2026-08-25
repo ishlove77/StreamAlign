@@ -4,7 +4,7 @@ Evaluation Word Version using NVIDIA NeMo ASR.
 
 Usage:
     python evaluate_word.py \
-        --test_csv /home/datasets/test-clean-quality2.csv\
+        --test_csv <path>/test-clean-quality2.csv\
         --num_samples 10
 """
 

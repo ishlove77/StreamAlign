@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Example: plain RVQ inference (mirror of scripts/rvq/run_train_rvq_example.sh).
-# Reconstructs wavs from a checkpoint trained by that script, on a subset of
-# LibriSpeech test-clean. Copy and adjust the env vars below for your run.
+# Example: plain RVQ inference. Reconstructs wavs from a trained checkpoint
+# on a subset of LibriSpeech test-clean. Copy and adjust the env vars below.
 #
 # Configurable knobs (must match the values the checkpoint was trained with —
 # they are read by models/model_tokenizer.py at construction):
@@ -13,6 +12,7 @@
 # Required:
 #   EXP_NAME           Used for the output dir name.
 #   STUDENT_CKPT       Absolute path to epoch_*.pt to evaluate.
+#   INPUT_DIR          Ground-truth wav root (contains test-clean/).
 #
 # Optional:
 #   TEST_CSV           Subset CSV. Default: data/groundtruth_test-clean_1of10.csv
@@ -23,33 +23,41 @@
 #   LEFT_CONTEXT       Default 32 (match training).
 #
 # Run:
-#   sr 1 24 --qos=q-low bash scripts/inference/run_inference_rvq_example.sh
+#   bash scripts/inference/run_inference_rvq_example.sh
 # ============================================================================
 
 set -euo pipefail
 
 STREAMASR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-REMOTE_ROOT="/home/streamalign/streamASR"
 
-export PYTHONPATH="/home/CosyVoice:/home/CosyVoice/third_party/Matcha-TTS:${PYTHONPATH:-}"
+# ---- environment (override via env) ----------------------------------------
+PYTHON=${PYTHON:-python}
+COSYVOICE_ROOT=${COSYVOICE_ROOT:-${STREAMASR_ROOT}/third_party/CosyVoice}
+CHAR_ASR_CKPT=${CHAR_ASR_CKPT:-${STREAMASR_ROOT}/results/char_asr_ckpt}
+WORD_ASR_CKPT=${WORD_ASR_CKPT:-${STREAMASR_ROOT}/train/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt}
+BOUNDARY_CKPT=${BOUNDARY_CKPT:-${STREAMASR_ROOT}/train/results/boundary_classifier/save/best_model.pt}
+# ----------------------------------------------------------------------------
+
+export PYTHONPATH="${COSYVOICE_ROOT}:${COSYVOICE_ROOT}/third_party/Matcha-TTS:${PYTHONPATH:-}"
 export WANDB_MODE=offline
 export PYTHONUNBUFFERED=1
 
 # --- knobs (must match the training run that produced STUDENT_CKPT) -------
-export RVQ_R=8                  # match training (try 8, 16, 32)
-export RVQ_CODEBOOK_SIZE=512    # match training (try 512, 64, 16)
-export D_HIDDEN=512             # match training (default 512)
+export RVQ_R=${RVQ_R:-16}                       # match training
+export RVQ_CODEBOOK_SIZE=${RVQ_CODEBOOK_SIZE:-512}  # match training
+export D_HIDDEN=${D_HIDDEN:-512}                # match training (default 512)
 # --------------------------------------------------------------------------
 
 : "${EXP_NAME:?EXP_NAME is required (used for output dir naming)}"
 : "${STUDENT_CKPT:?STUDENT_CKPT is required (absolute path to epoch_*.pt)}"
+: "${INPUT_DIR:?INPUT_DIR is required (ground-truth wav root)}"
 : "${TEST_CSV:=${STREAMASR_ROOT}/data/groundtruth_test-clean_1of10.csv}"
 : "${OUTPUT_DIR:=${STREAMASR_ROOT}/results/inference/${EXP_NAME}/test-clean_1of10}"
 : "${BATCH_SIZE:=1}"
 : "${CHUNK_SIZE:=4}"
 : "${LEFT_CONTEXT:=32}"
 
-NUM_GPUS=$(python -c "import torch; print(max(1, torch.cuda.device_count()))")
+NUM_GPUS=$("${PYTHON}" -c "import torch; print(max(1, torch.cuda.device_count()))")
 
 echo "============================================================"
 echo "[infer-example] $(date -Iseconds)"
@@ -68,9 +76,9 @@ echo "============================================================"
 mkdir -p "${OUTPUT_DIR}"
 cd "${STREAMASR_ROOT}"
 
-python "${STREAMASR_ROOT}/inference/inference_core.py" \
+"${PYTHON}" "${STREAMASR_ROOT}/inference/inference_core.py" \
     --variant=rvq \
-    --input_dir="/home/datasets/experiments/streamalign/groundtruth" \
+    --input_dir="${INPUT_DIR}" \
     --output_dir="${OUTPUT_DIR}" \
     --split="test-clean" \
     --output_split="test-clean" \
@@ -78,12 +86,12 @@ python "${STREAMASR_ROOT}/inference/inference_core.py" \
     --chunk_size="${CHUNK_SIZE}" \
     --left_context="${LEFT_CONTEXT}" \
     --hparams="${STREAMASR_ROOT}/hparams/alignment.yaml" \
-    --truthmodel_checkpoint_path="${REMOTE_ROOT}/results/char_asr_ckpt" \
+    --truthmodel_checkpoint_path="${CHAR_ASR_CKPT}" \
     --studentmodel_checkpoint_path="${STUDENT_CKPT}" \
     --test_csv="${TEST_CSV}" \
-    --word_hparams="${REMOTE_ROOT}/hparams/chunk_streaming_word_fastemit.yaml" \
-    --word_checkpoint="${REMOTE_ROOT}/train/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt" \
-    --boundary_classifier_ckpt="${REMOTE_ROOT}/train/results/best_model.pt" \
+    --word_hparams="${STREAMASR_ROOT}/hparams/chunk_streaming_word_fastemit.yaml" \
+    --word_checkpoint="${WORD_ASR_CKPT}" \
+    --boundary_classifier_ckpt="${BOUNDARY_CKPT}" \
     --world_size="${NUM_GPUS}" \
     --tokenizer="llama"
 

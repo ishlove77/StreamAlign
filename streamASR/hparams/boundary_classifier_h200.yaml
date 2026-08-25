@@ -30,18 +30,19 @@ __set_seed: !apply:speechbrain.utils.seed_everything [42]
 asr_hparams_file: hparams/chunk_streaming_word_fastemit.yaml
 
 # Path to a checkpoint directory (must contain model.ckpt and normalizer.ckpt).
-asr_checkpoint: results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt
+asr_checkpoint: train/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt
 
 # Path to a sentencepiece tokenizer checkpoint (tokenizer.ckpt).
-tokenizer_ckpt: results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt
+tokenizer_ckpt: train/results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt
 
 # ── Streaming configuration (must match the ASR model's inference setting) ──
 chunk_size: 4          # encoder output frames per chunk  (~40 ms / chunk)
 left_context: 32       # left context in # of chunks
 
 # ── Dataset ──────────────────────────────────────────────────────────────────
-# LibriSpeech root directory (contains train-clean-100/, dev-clean/, …). h200 = flac layout.
-data_folder: /wbl-fast/raw/speech/eng/LibriSpeech/data
+# LibriSpeech root directory (contains train-clean-100/, dev-clean/, …).
+# The launcher overrides this with --data_folder "${LIBRISPEECH_ROOT}".
+data_folder: /data/LibriSpeech
 
 # Splits used for dataset creation.
 train_splits:

@@ -6,17 +6,17 @@
 # Launches multiple CPU-only ONNX workers in parallel (no GPU needed).
 #
 # Usage:
-#   sr 0 bash run_precompute_tokens_emilia.sh                      # CPU job
-#   sr 0 bash run_precompute_tokens_emilia.sh --qos=q-low          # long job
+#   bash run_precompute_tokens_emilia.sh          # CPU-only ONNX workers
 # ============================================================================
 
 set -euo pipefail
 
 STREAMASR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-COSYVOICE_ROOT="/home/CosyVoice"
+COSYVOICE_ROOT="${COSYVOICE_ROOT:-${STREAMASR_ROOT}/third_party/CosyVoice}"
+export COSYVOICE_ROOT
 
-EMILIA_CSV="${EMILIA_CSV:-/home/datasets/Emilia/emilia_en_400h.csv}"
-EMILIA_DATA_ROOT="${EMILIA_DATA_ROOT:-/home/datasets/Emilia}"
+EMILIA_DATA_ROOT="${EMILIA_DATA_ROOT:-${EMILIA_ROOT:?set EMILIA_ROOT (or EMILIA_DATA_ROOT) to your Emilia root}}"
+EMILIA_CSV="${EMILIA_CSV:-${EMILIA_DATA_ROOT}/emilia_en_400h.csv}"
 LOG_DIR="${LOG_DIR:-${STREAMASR_ROOT}/logs/precompute_emilia}"
 mkdir -p "${LOG_DIR}"
 
@@ -29,9 +29,7 @@ echo "  CSV:       ${EMILIA_CSV}"
 echo "  data_root: ${EMILIA_DATA_ROOT}"
 echo "  log_dir:   ${LOG_DIR}"
 
-PYTHON="/home/miniconda3/envs/streamASR/bin/python"
-_CONDA_ENV="/home/miniconda3/envs/streamASR"
-export LD_LIBRARY_PATH="${_CONDA_ENV}/lib:${LD_LIBRARY_PATH:-}"
+PYTHON="${PYTHON:-python}"
 
 PIDS=()
 for RANK in $(seq 0 $((N_WORKERS - 1))); do

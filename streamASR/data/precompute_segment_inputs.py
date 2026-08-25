@@ -38,6 +38,9 @@ warnings.filterwarnings("ignore", message=".*TorchCodec.*")
 
 _STREAMASR_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _STREAMASR_ROOT)
+_COSYVOICE_ROOT = os.environ.get(
+    "COSYVOICE_ROOT", os.path.join(_STREAMASR_ROOT, "third_party", "CosyVoice")
+)
 
 matcha_path = os.path.join(_STREAMASR_ROOT, "third_party", "Matcha-TTS")
 if matcha_path not in sys.path:
@@ -52,7 +55,7 @@ from utils.train_utils import (
 )
 from models.model import Data2VecSemanticAcousticModel
 
-sys.path.insert(0, "/home/CosyVoice")
+sys.path.insert(0, _COSYVOICE_ROOT)
 from cosyvoice.cli.frontend import CosyVoiceFrontEnd
 
 
@@ -72,11 +75,11 @@ def parse_args():
     parser.add_argument("--left_context", type=int, default=32)
     parser.add_argument(
         "--hparams", type=str,
-        default="/home/streamalign/streamASR/hparams/alignment.yaml",
+        default=os.path.join(_STREAMASR_ROOT, "hparams", "alignment.yaml"),
     )
     parser.add_argument(
         "--checkpoint_path", type=str,
-        default="/home/streamalign/streamASR/results/char_asr_ckpt",
+        default=os.environ.get("CHAR_ASR_CKPT", os.path.join(_STREAMASR_ROOT, "results", "char_asr_ckpt")),
     )
     parser.add_argument(
         "--resume_path", type=str, default=None,
@@ -232,7 +235,7 @@ def main():
     torch.backends.cudnn.benchmark = True
 
     # Build model (encoder + acoustic_head only needed; segment_pass not needed here)
-    model_dir = "/home/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B"
+    model_dir = os.path.join(_COSYVOICE_ROOT, "pretrained_models", "Fun-CosyVoice3-0.5B")
 
     with open(f"{model_dir}/cosyvoice3.yaml", "r") as f:
         configs = load_hyperpyyaml(f)
@@ -268,11 +271,11 @@ def main():
         wavpaths = []
         if split == "train":
             for dataset in ["train-clean-100", "train-clean-360", "train-other-500"]:
-                pattern = f"/home/datasets/LibriTTS/{dataset}/*/*/*.wav"
+                pattern = os.path.join(os.environ.get("LIBRITTS_ROOT", "/data/LibriTTS"), dataset, "*", "*", "*.wav")
                 wavpaths.extend(glob.glob(pattern))
         elif split == "val":
             for dataset in ["dev-clean"]:
-                pattern = f"/home/datasets/LibriTTS/{dataset}/*/*/*.wav"
+                pattern = os.path.join(os.environ.get("LIBRITTS_ROOT", "/data/LibriTTS"), dataset, "*", "*", "*.wav")
                 wavpaths.extend(glob.glob(pattern))
         else:
             raise ValueError(f"Unknown split: {split!r}. Use 'train' or 'val'.")

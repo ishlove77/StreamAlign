@@ -215,9 +215,9 @@ def run(rank: int, args):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    STREAMASR = "/home/streamalign/streamASR"
-    parser.add_argument("--input_dir",   default="/home/datasets/LibriSpeech")
-    parser.add_argument("--output_dir",  default="/home/Streaming/dataset_qwen3")
+    STREAMASR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    parser.add_argument("--input_dir",   default=os.environ.get("LIBRISPEECH_ROOT", "/data/LibriSpeech"))
+    parser.add_argument("--output_dir",  default=os.path.join(STREAMASR, "results", "inference_out"))
     parser.add_argument("--split",       default="test-clean")
     parser.add_argument("--chunk_size",  type=int, default=8)
     parser.add_argument("--left_context",type=int, default=32)

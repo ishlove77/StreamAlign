@@ -43,8 +43,8 @@ Usage
 -----
 python measure_latency_word.py \\
     --hparams_file /path/to/chunk_streaming_word.yaml \\
-    --checkpoint   /home/streamalign/streamASR/train/results/best_model.pt \\
-    --input_dir /home/datasets/LibriSpeech \\
+    --checkpoint   <streamASR>/train/results/boundary_classifier/save/best_model.pt \\
+    --input_dir <LIBRISPEECH_ROOT> \\
     --split test-clean \\
     [--chunk_size 4] \\
     [--left_context 32] \\
@@ -63,6 +63,8 @@ import os
 import sys
 import traceback
 import time
+
+_STREAMASR_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -479,17 +481,17 @@ def parse_args():
         )
     )
     p.add_argument("--hparams_file",
-                   default="/home/streamalign/streamASR/hparams/chunk_streaming_word_fastemit.yaml",
+                   default=os.path.join(_STREAMASR_ROOT, "hparams", "chunk_streaming_word_fastemit.yaml"),
                    help="Path to SpeechBrain hparams YAML for StreamingASR (word-piece/BPE).")
     p.add_argument("--checkpoint", type=str,
-                   default="/home/streamalign/streamASR/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt",
+                   default=os.environ.get("WORD_ASR_CKPT", os.path.join(_STREAMASR_ROOT, "train", "results", "conformer_transducer_char", "word_fastemit", "save", "word_asr_ckpt")),
                    help="Path to checkpoint directory or file (optional).")
     p.add_argument("--chunk_size", type=int, default=4,
                    help="DynChunkTrain chunk size in encoder output frames.")
     p.add_argument("--left_context", type=int, default=32,
                    help="DynChunkTrain left context size in encoder output frames.")
     p.add_argument("--input_dir",
-                   default="/home/datasets/LibriSpeech",
+                   default=os.environ.get("LIBRISPEECH_ROOT", "/data/LibriSpeech"),
                    help="Root LibriSpeech directory containing split sub-folders.")
     p.add_argument("--split", default="test-clean",
                    help="Dataset split name (must have TextGrid files alongside .wav).")
@@ -497,14 +499,14 @@ def parse_args():
                    help="Limit number of .wav files processed (for quick testing).")
     p.add_argument("--output_csv", type=str, default=None,
                    help="Optional CSV file path to save per-word latency records.")
-    p.add_argument("--csv_dir", type=str, default="/home/datasets/LibriSpeech/csv",
+    p.add_argument("--csv_dir", type=str, default=os.path.join(os.environ.get("LIBRISPEECH_ROOT", "/data/LibriSpeech"), "csv"),
                    help="Directory containing LibriSpeech CSV files (e.g. …/LibriSpeech/csv). "
                         "Defaults to <input_dir>/csv. Used for WER/CER reference text.")
-    p.add_argument("--tokenizer_ckpt", type=str, default="/home/streamalign/streamASR/train/results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt",
+    p.add_argument("--tokenizer_ckpt", type=str, default=os.path.join(_STREAMASR_ROOT, "train", "results", "conformer_transducer_char", "word_fastemit", "pretrained", "tokenizer.ckpt"),
                    help="Explicit path to tokenizer.ckpt. If omitted, the script "
                         "searches <checkpoint>/../pretrained/tokenizer.ckpt and "
                         "the pretrain_folder declared in the hparams YAML.")
-    p.add_argument("--boundary_classifier_ckpt", type=str, default="/home/streamalign/streamASR/train/results/boundary_classifier_0416/save/best_precision_model.pt",
+    p.add_argument("--boundary_classifier_ckpt", type=str, default=os.environ.get("BOUNDARY_CKPT", os.path.join(_STREAMASR_ROOT, "train", "results", "boundary_classifier", "save", "best_precision_model.pt")),
                    help="Path to a trained BoundaryClassifier checkpoint "
                         "(best_model.pt produced by train/train_boundary_classifier.py). "
                         "When provided, the boundary model replaces the default heuristic "

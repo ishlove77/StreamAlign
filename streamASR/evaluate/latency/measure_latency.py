@@ -43,7 +43,7 @@ Usage
 python measure_latency.py \\
     --hparams_file /path/to/train_chunk_streaming.yaml \\
     --checkpoint   /path/to/checkpoint_dir \\
-    --input_dir /home/datasets/LibriSpeech \\
+    --input_dir <LIBRISPEECH_ROOT> \\
     --split test-clean \\
     [--chunk_size 16] \\
     [--left_context 8] \\
@@ -60,6 +60,8 @@ import itertools
 import logging
 import os
 import sys
+
+_STREAMASR_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import traceback
 import time
 from dataclasses import dataclass
@@ -379,16 +381,16 @@ def parse_args():
         )
     )
     p.add_argument("--hparams_file",
-                   default="/home/streamalign/streamASR/hparams/chunk_streaming_char.yaml",
+                   default=os.path.join(_STREAMASR_ROOT, "hparams", "chunk_streaming_char.yaml"),
                    help="Path to SpeechBrain hparams YAML for StreamingCharModel.")
-    p.add_argument("--checkpoint", type=str, default="/home/streamalign/streamASR/train/results/conformer_transducer_char/char_asr/save/char_asr_ckpt",
+    p.add_argument("--checkpoint", type=str, default=os.path.join(_STREAMASR_ROOT, "train", "results", "conformer_transducer_char", "char_asr", "save", "char_asr_ckpt"),
                    help="Path to checkpoint directory or file (optional).")
     p.add_argument("--chunk_size", type=int, default=8,
                    help="DynChunkTrain chunk size in encoder output frames.")
     p.add_argument("--left_context", type=int, default=32,
                    help="DynChunkTrain left context size in encoder output frames.")
     p.add_argument("--input_dir",
-                   default="/home/datasets/LibriSpeech",
+                   default=os.environ.get("LIBRISPEECH_ROOT", "/data/LibriSpeech"),
                    help="Root LibriSpeech directory containing split sub-folders.")
     p.add_argument("--split", default="test-clean",
                    help="Dataset split name (must have TextGrid files alongside .wav).")

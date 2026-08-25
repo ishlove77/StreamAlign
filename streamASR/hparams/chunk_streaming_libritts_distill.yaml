@@ -18,25 +18,27 @@ train_log: results/conformer_transducer_char/word_distill/train_log.txt
 pretrained_source: speechbrain/asr-streaming-conformer-librispeech
 pretrained_save: results/conformer_transducer_char/word_distill/pretrained
 
-# Data folders
-data_folder: /home/datasets/LibriTTS
-valid_data_folder: /home/datasets/LibriSpeech
+# Data folders — the launcher overrides these from LIBRITTS_ROOT /
+# LIBRISPEECH_ROOT / EMILIA_ROOT env vars.
+data_folder: /data/LibriTTS
+valid_data_folder: /data/LibriSpeech
 
 # Emilia data
-emilia_data_folder: /home/datasets/Emilia
-emilia_train_csv: /home/datasets/Emilia/emilia_en_400h.csv
-emilia_textgrid_dir: /home/datasets/Emilia/chunk_textgrids_word_model_final
+emilia_data_folder: /data/Emilia
+emilia_train_csv: /data/Emilia/emilia_en_400h.csv
+# Written by generate_textgrids.sh --emilia (…_final2 suffix).
+emilia_textgrid_dir: /data/Emilia/chunk_textgrids_word_model_final2
 
 # CSV files
 train_csv:
-   - /home/datasets/LibriTTS/csv/train-clean-100.csv
-   - /home/datasets/LibriTTS/csv/train-clean-360.csv
-   - /home/datasets/LibriTTS/csv/train-other-500.csv
+   - /data/LibriTTS/csv/train-clean-100.csv
+   - /data/LibriTTS/csv/train-clean-360.csv
+   - /data/LibriTTS/csv/train-other-500.csv
 
-valid_csv: /home/datasets/LibriSpeech/csv/dev-clean.csv
+valid_csv: /data/LibriSpeech/csv/dev-clean.csv
 
 test_csv:
-   - /home/datasets/LibriTTS/csv/test.csv
+   - /data/LibriTTS/csv/test.csv
 
 ckpt_interval_minutes: 5
 

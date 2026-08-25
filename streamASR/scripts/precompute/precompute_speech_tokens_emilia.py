@@ -24,7 +24,9 @@ import torchaudio.functional as F_audio
 from hyperpyyaml import load_hyperpyyaml
 
 _STREAMASR_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-_COSYVOICE_ROOT = "/home/CosyVoice"
+_COSYVOICE_ROOT = os.environ.get(
+    "COSYVOICE_ROOT", os.path.join(_STREAMASR_ROOT, "third_party", "CosyVoice")
+)
 
 for p in [
     os.path.join(_STREAMASR_ROOT, "third_party", "Matcha-TTS"),
@@ -37,9 +39,9 @@ for p in [
 
 from cosyvoice.cli.frontend import CosyVoiceFrontEnd
 
-_EMILIA_ROOT = "/home/datasets/Emilia"
+_EMILIA_ROOT = os.environ.get("EMILIA_ROOT", "/data/Emilia")
 _DEFAULT_CSV = os.path.join(_EMILIA_ROOT, "emilia_en_400h.csv")
-_MODEL_DIR   = "/home/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B"
+_MODEL_DIR   = os.path.join(_COSYVOICE_ROOT, "pretrained_models", "Fun-CosyVoice3-0.5B")
 _MAX_WAV_SECONDS = 30.0
 _SAMPLE_RATE     = 16_000
 

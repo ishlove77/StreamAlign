@@ -18,6 +18,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# ---- environment (override via env) ----------------------------------------
+PYTHON=${PYTHON:-python}
+LIBRISPEECH_ROOT=${LIBRISPEECH_ROOT:?set LIBRISPEECH_ROOT to your LibriSpeech root}
+# ----------------------------------------------------------------------------
+
+# Relative paths in the yaml resolve against the streamASR root.
+cd "${SCRIPT_DIR}"
+
 # ── Defaults ─────────────────────────────────────────────────────────────────
 HPARAMS="${SCRIPT_DIR}/hparams/boundary_classifier.yaml"
 MAX_FILES_ARG=""
@@ -39,8 +47,9 @@ echo "  Hparams : ${HPARAMS}"
 echo "========================================================"
 
 # shellcheck disable=SC2086
-python "${SCRIPT_DIR}/data/create_boundary_dataset.py" \
+"${PYTHON}" "${SCRIPT_DIR}/data/create_boundary_dataset.py" \
     "${HPARAMS}"       \
+    --data_folder "${LIBRISPEECH_ROOT}" \
     ${MAX_FILES_ARG}   \
     ${TOKENIZER_ARG}
 

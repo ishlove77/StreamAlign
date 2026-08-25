@@ -48,16 +48,26 @@ export PYTHONPATH="${STREAMASR_ROOT}:${PYTHONPATH:-}"
 export RVQ_R RVQ_CODEBOOK_SIZE
 unset RVQ_CODEBOOK_DIM           # codebook_dim = feat_dim (256)
 
-# ---- Data / checkpoint paths (edit for your machine) ------------------------
+# ---- Data / checkpoint paths (override via env) -----------------------------
+: "${PYTHON:=python}"
+# TRUTH_CKPT: point (or symlink results/char_asr_ckpt) at your best char-ASR
+# SpeechBrain checkpoint dir (train/results/conformer_transducer_char/char_asr/save/CKPT+...).
 : "${TRUTH_CKPT:=${STREAMASR_ROOT}/results/char_asr_ckpt}"
 : "${HPARAMS:=${STREAMASR_ROOT}/hparams/alignment.yaml}"
-: "${LIBRI_ROOT:=/home/datasets/LibriSpeech}"
-: "${EMILIA_CSV:=/home/datasets/Emilia/emilia_en_400h.csv}"
-: "${EMILIA_ROOT:=/home/datasets/Emilia}"
+: "${LIBRISPEECH_ROOT:?set LIBRISPEECH_ROOT to your LibriSpeech root}"
+: "${LIBRITTS_ROOT:?set LIBRITTS_ROOT to your LibriTTS root}"
+: "${EMILIA_ROOT:?set EMILIA_ROOT to your Emilia dataset root}"
+: "${EMILIA_CSV:=${EMILIA_ROOT}/emilia_en_400h.csv}"
+# Training reads LibriTTS; TextGrids default to the generate_textgrids.sh
+# output alongside the LibriTTS root.
+: "${TEXTGRID_ROOT:=${LIBRITTS_ROOT}/chunk_textgrids_word_model_final2}"
+: "${COSYVOICE_ROOT:=${STREAMASR_ROOT}/third_party/CosyVoice}"
 : "${NUM_EPOCHS:=400}"
 : "${MASTER_PORT:=29662}"
+# Exported: the trainers / utils read these names from the environment.
+export LIBRISPEECH_ROOT LIBRITTS_ROOT EMILIA_ROOT TEXTGRID_ROOT COSYVOICE_ROOT
 
-NUM_GPUS=$(python -c "import torch; print(max(1, torch.cuda.device_count()))")
+NUM_GPUS=$("${PYTHON}" -c "import torch; print(max(1, torch.cuda.device_count()))")
 cd "${STREAMASR_ROOT}"
 
 common_args=(
@@ -73,6 +83,7 @@ common_args=(
     --emilia_sample_ratio=0.1
     --emilia_csv="${EMILIA_CSV}"
     --emilia_data_root="${EMILIA_ROOT}"
+    --data_root="${LIBRITTS_ROOT}"
     --use_precomputed_features
 )
 
