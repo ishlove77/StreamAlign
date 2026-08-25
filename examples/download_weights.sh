@@ -40,4 +40,5 @@ echo "  ${DEST}/Streamalign-R32/rvq_tokenizer/final.pt    R=32 RVQ tokenizer (ph
 echo "  ${DEST}/Streamalign-R32/alignment_model/          char-level alignment ASR"
 echo "  ${DEST}/Streamalign-R32/streaming_asr/            word-level streaming ASR"
 echo "  ${DEST}/Streamalign-R32/boundary_classifier/      proactive boundary classifier"
+echo "  ${DEST}/Streamalign-R16/rvq_teacher/epoch_22.pt   R=16 RVQ tokenizer (SLM example)"
 echo "  ${DEST}/Streamalign-SLM-R16/step_00185000.pt                speech LM (R=16 units)"

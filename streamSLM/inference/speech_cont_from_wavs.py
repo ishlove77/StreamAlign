@@ -38,7 +38,9 @@ import torchaudio
 # repo does (mirrors streamSLM.eval.extractor).
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _STREAMASR_ROOT = os.path.join(_REPO_ROOT, "streamASR")
-_COSYVOICE_ROOT = "/home/CosyVoice"
+_COSYVOICE_ROOT = os.environ.get(
+    "COSYVOICE_ROOT", os.path.join(_STREAMASR_ROOT, "third_party", "CosyVoice")
+)
 for _p in [
     os.path.join(_STREAMASR_ROOT, "third_party", "Matcha-TTS"),
     os.path.join(_COSYVOICE_ROOT, "third_party", "Matcha-TTS"),
@@ -129,21 +131,21 @@ def main():
 
     # --- streamASR / CosyVoice decode head ---------------------------------- #
     ap.add_argument("--hparams",
-                    default="/home/streamalign/streamASR/hparams/alignment.yaml")
+                    default=os.environ.get("ASR_HPARAMS", os.path.join(_STREAMASR_ROOT, "hparams", "alignment.yaml")))
     ap.add_argument("--truthmodel_checkpoint_path",
-                    default="/home/streamalign/streamASR/results/char_asr_ckpt")
+                    default=os.environ.get("TRUTH_MODEL_CKPT", os.path.join(_STREAMASR_ROOT, "results", "char_asr_ckpt")))
     ap.add_argument("--chunk_size", type=int, default=16)
     ap.add_argument("--left_context", type=int, default=8)
     ap.add_argument("--cosyvoice_model_dir",
-                    default="/home/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B")
+                    default=os.path.join(_COSYVOICE_ROOT, "pretrained_models", "Fun-CosyVoice3-0.5B"))
 
     # --- streaming word ASR (TG generator) ---------------------------------- #
     ap.add_argument("--word_asr_hparams",
-                    default="/home/streamalign/streamASR/hparams/chunk_streaming_word_fastemit.yaml")
+                    default=os.path.join(_STREAMASR_ROOT, "hparams", "chunk_streaming_word_fastemit.yaml"))
     ap.add_argument("--word_asr_checkpoint",
-                    default="/home/streamalign/streamASR/results/conformer_transducer_char/word_fastemit/save/word_asr_ckpt")
+                    default=os.environ.get("WORD_ASR_CKPT", os.path.join(_STREAMASR_ROOT, "train", "results", "conformer_transducer_char", "word_fastemit", "save", "word_asr_ckpt")))
     ap.add_argument("--word_asr_tokenizer",
-                    default="/home/streamalign/streamASR/results/conformer_transducer_char/word_fastemit/pretrained/tokenizer.ckpt")
+                    default=os.path.join(_STREAMASR_ROOT, "train", "results", "conformer_transducer_char", "word_fastemit", "pretrained", "tokenizer.ckpt"))
     ap.add_argument("--word_chunk_size", type=int, default=4)
     ap.add_argument("--word_left_context", type=int, default=32)
 

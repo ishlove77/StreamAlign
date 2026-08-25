@@ -36,6 +36,12 @@ import sys
 import time
 from pathlib import Path
 
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_STREAMASR_ROOT = os.path.join(_REPO_ROOT, "streamASR")
+_COSYVOICE_ROOT = os.environ.get(
+    "COSYVOICE_ROOT", os.path.join(_STREAMASR_ROOT, "third_party", "CosyVoice")
+)
+
 # Match extract_tokens.py / reconstruct.py: silence wandb before imports.
 os.environ.setdefault("WANDB_MODE", "disabled")
 os.environ.setdefault("WANDB_DISABLED", "true")
@@ -109,14 +115,14 @@ def main():
 
     # Reconstruct / streamalign knobs (mirrors reconstruct.py defaults).
     ap.add_argument("--variant", choices=["rvq"], default="rvq")
-    ap.add_argument("--hparams", default=
-                    "/home/streamalign/streamASR/hparams/alignment.yaml")
-    ap.add_argument("--truthmodel_checkpoint_path", default=
-                    "/home/streamalign/streamASR/results/char_asr_ckpt")
+    ap.add_argument("--hparams", default=os.environ.get(
+                    "ASR_HPARAMS", os.path.join(_STREAMASR_ROOT, "hparams", "alignment.yaml")))
+    ap.add_argument("--truthmodel_checkpoint_path", default=os.environ.get(
+                    "TRUTH_MODEL_CKPT", os.path.join(_STREAMASR_ROOT, "results", "char_asr_ckpt")))
     ap.add_argument("--chunk_size", type=int, default=16)
     ap.add_argument("--left_context", type=int, default=8)
-    ap.add_argument("--cosyvoice_model_dir", default=
-                    "/home/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B")
+    ap.add_argument("--cosyvoice_model_dir", default=os.path.join(
+                    _COSYVOICE_ROOT, "pretrained_models", "Fun-CosyVoice3-0.5B"))
 
     # Whisper.
     ap.add_argument("--whisper_model", default="base.en")

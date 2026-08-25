@@ -25,7 +25,7 @@ If neither flag is given, generation starts from a single BOS token.
 Usage:
     sr 1 24 python -m streamSLM.inference.synthesize \
         --slm_checkpoint checkpoints/streamSLM/.../step_00050000.pt \
-        --streamalign_ckpt /home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt \
+        --streamalign_ckpt weights/Streamalign-R16/rvq_teacher/epoch_22.pt \
         --speaker_wav prompts/jane.wav \
         --text_prompt "Once upon a time" \
         --max_new_tokens 96 \
@@ -58,7 +58,9 @@ import torchaudio
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _STREAMASR_ROOT = os.path.join(_REPO_ROOT, "streamASR")
-_COSYVOICE_ROOT = "/home/CosyVoice"
+_COSYVOICE_ROOT = os.environ.get(
+    "COSYVOICE_ROOT", os.path.join(_STREAMASR_ROOT, "third_party", "CosyVoice")
+)
 for p in [
     os.path.join(_STREAMASR_ROOT, "third_party", "Matcha-TTS"),
     os.path.join(_COSYVOICE_ROOT, "third_party", "Matcha-TTS"),
@@ -114,14 +116,14 @@ def main():
                     help="StreamAlign student .pt (the encoder used during extraction).")
     ap.add_argument("--variant", choices=["rvq"], default="rvq")
     ap.add_argument("--hparams", default=
-                    "/home/streamalign/streamASR/hparams/alignment.yaml")
+                    os.environ.get("ASR_HPARAMS", os.path.join(_STREAMASR_ROOT, "hparams", "alignment.yaml")))
     ap.add_argument("--truthmodel_checkpoint_path", default=
-                    "/home/streamalign/streamASR/results/char_asr_ckpt")
+                    os.environ.get("TRUTH_MODEL_CKPT", os.path.join(_STREAMASR_ROOT, "results", "char_asr_ckpt")))
     ap.add_argument("--chunk_size", type=int, default=16)
     ap.add_argument("--left_context", type=int, default=8)
     # ---- CosyVoice (flow + hift -> wav) ----
     ap.add_argument("--cosyvoice_model_dir", default=
-                    "/home/CosyVoice/pretrained_models/Fun-CosyVoice3-0.5B")
+                    os.path.join(_COSYVOICE_ROOT, "pretrained_models", "Fun-CosyVoice3-0.5B"))
     ap.add_argument("--speaker_wav", required=True,
                     help="Reference wav for speaker embedding + flow prompt.")
     # ---- Prompting ----

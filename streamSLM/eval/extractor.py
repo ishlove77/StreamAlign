@@ -32,7 +32,9 @@ import torch
 # streamSLM.extract.extract_tokens does.
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _STREAMASR_ROOT = os.path.join(_REPO_ROOT, "streamASR")
-_COSYVOICE_ROOT = "/home/CosyVoice"
+_COSYVOICE_ROOT = os.environ.get(
+    "COSYVOICE_ROOT", os.path.join(_STREAMASR_ROOT, "third_party", "CosyVoice")
+)
 for _p in [
     os.path.join(_STREAMASR_ROOT, "third_party", "Matcha-TTS"),
     os.path.join(_COSYVOICE_ROOT, "third_party", "Matcha-TTS"),
@@ -54,10 +56,17 @@ from streamSLM.units import SubwordUnits  # noqa: E402
 # --------------------------------------------------------------------------- #
 # Defaults — match streamSLM.inference.synthesize / extract_tokens.py
 # --------------------------------------------------------------------------- #
-DEFAULT_HPARAMS = "/home/streamalign/streamASR/hparams/alignment.yaml"
-DEFAULT_TRUTHMODEL = "/home/streamalign/streamASR/results/char_asr_ckpt"
+DEFAULT_HPARAMS = os.environ.get(
+    "ASR_HPARAMS", os.path.join(_STREAMASR_ROOT, "hparams", "alignment.yaml")
+)
+DEFAULT_TRUTHMODEL = os.environ.get(
+    "TRUTH_MODEL_CKPT", os.path.join(_STREAMASR_ROOT, "results", "char_asr_ckpt")
+)
 # Released R=16 tokenizer (Streamalign-R16, rvq_teacher/epoch_22.pt).
-DEFAULT_TEACHER = "/home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt"
+DEFAULT_TEACHER = os.environ.get(
+    "TEACHER_CKPT",
+    os.path.join(_REPO_ROOT, "weights", "Streamalign-R16", "rvq_teacher", "epoch_22.pt"),
+)
 DEFAULT_RVQ_NUM_QUANTIZERS = 8
 DEFAULT_RVQ_CODEBOOK_SIZE = 512
 

@@ -1,7 +1,7 @@
 """End-to-end driver: run UTMOS / SECS / GPT-4o on continuation outputs.
 
-Designed for the two delay-2 hier-durfirst-durreg emilia4000h checkpoints
-(R16, R32_d16). Operates per model directory; reads ``*_with_prompt.wav``
+Designed for the released R=16 continuation checkpoint. Operates per model
+directory; reads ``*_with_prompt.wav``
 plus the sidecar ``<stem>.json`` for transcripts.
 
 UTMOS and SECS share a single GPU launch; the GPT judge is CPU-only (network
@@ -23,10 +23,12 @@ from typing import Optional
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-DEFAULT_INPUT_WAV_DIR = Path("/home/datasets/continuation/input_wavs")
+DEFAULT_INPUT_WAV_DIR = Path(
+    os.environ.get("CONT_ROOT", str(REPO_ROOT / "out" / "continuation"))
+) / "input_wavs"
 DEFAULT_MODEL_DIRS = [
-    Path("/home/datasets/continuation/"
-         "streamalign_slm_r16"),
+    Path(os.environ.get("CONT_ROOT", str(REPO_ROOT / "out" / "continuation")))
+    / "streamalign_slm_r16",
 ]
 
 
@@ -193,8 +195,8 @@ def parse_args() -> argparse.Namespace:
         "--model_dir",
         action="append",
         default=None,
-        help="continuation output dir(s) (repeatable); defaults to the two "
-             "delay-2 R16/R32_d16 emilia4000h dirs.",
+        help="continuation output dir(s) (repeatable); defaults to the "
+             "released R16 continuation dir under CONT_ROOT.",
     )
     ap.add_argument(
         "--input_wav_dir",

@@ -27,7 +27,7 @@ StreamAlign teacher. Each subword `n` is represented by a tuple
 | `duration_frames` | `(N,)`   | Encoder-frame count per subword (25 Hz, 40 ms / frame)   |
 
 Default tokenization is **RVQ R=16, C=512**, teacher
-`/home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt`
+`weights/Streamalign-R16/rvq_teacher/epoch_22.pt`
 (released as `Streamalign-R16`, `rvq_teacher/epoch_22.pt`).
 
 The model is a Llama-3.2-1B backbone + audio embedding fusion + delayed-prediction
@@ -104,7 +104,7 @@ Common toggles:
 | `PREDICTOR_TYPE`              | `depth_transformer` (default) / `mlp`                  |
 | `DEPFORMER_{DIM,HEADS,LAYERS,FF}` | Depth-transformer geometry                         |
 | `NGPU`                        | `>1` ⇒ launch via `torchrun --nproc_per_node=$NGPU`    |
-| `VRAM` `SR_QOS` `SR_NODELIST` | Slurm allocation knobs                                 |
+| `LAUNCHER`                    | Job-submission prefix (empty = run directly; e.g. a Slurm wrapper) |
 | `STREAMSLM_ATTN_IMPL`         | `flash_attention_2` (Ampere+) / `sdpa` (eval pool)     |
 | `STREAMSLM_GRADIENT_CHECKPOINTING=1` | Drop activation memory for big backbones        |
 | `RESUME`                      | Path to `step_*.pt` to resume from                     |
@@ -114,7 +114,7 @@ Common toggles:
 Direct (no shell wrapper):
 
 ```
-sr 1 48 --qos=q-low python -u -m streamSLM.train.train \
+python -u -m streamSLM.train.train \
     --manifest cache/streamSLM_units_C512_R16_rvq/librispeech/train-clean-100/manifest_shard*_of32.csv \
                 cache/streamSLM_units_C512_R16_rvq/.../manifest_shard*_of32.csv \
     --out_dir checkpoints/streamSLM/my_run \
@@ -156,9 +156,9 @@ A run is healthy when the log shows steady `loss/text`, `loss/acoustic`,
 `streamSLM.inference.synthesize` chains AR generation and waveform reconstruction.
 
 ```
-sr 1 24 python -m streamSLM.inference.synthesize \
+python -m streamSLM.inference.synthesize \
     --slm_checkpoint checkpoints/streamSLM/<RUN_NAME>/step_00010000.pt \
-    --streamalign_ckpt /home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt \
+    --streamalign_ckpt weights/Streamalign-R16/rvq_teacher/epoch_22.pt \
     --variant rvq \
     --speaker_wav prompts/jane.wav \
     --text_prompt "Once upon a time" \
@@ -197,7 +197,7 @@ A `<out_wav>.txt` sidecar is written with the decoded text and per-subword IDs.
 ### AR generation only (units, no audio)
 
 ```
-sr 1 24 python -m streamSLM.inference.generate \
+python -m streamSLM.inference.generate \
     --slm_checkpoint .../step_00050000.pt \
     --text_prompt "Once upon a time" \
     --max_new_tokens 96 \
@@ -207,9 +207,9 @@ sr 1 24 python -m streamSLM.inference.generate \
 ### Reconstruct from existing `.units.pt`
 
 ```
-sr 1 24 python -m streamSLM.inference.reconstruct \
+python -m streamSLM.inference.reconstruct \
     --units_pt out/sample.units.pt \
-    --streamalign_ckpt /home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt \
+    --streamalign_ckpt weights/Streamalign-R16/rvq_teacher/epoch_22.pt \
     --variant rvq \
     --speaker_wav prompts/jane.wav \
     --out_wav out/sample.wav
@@ -226,12 +226,12 @@ checks against ground-truth `.units.pt` from the extraction cache.
 
 ```
 SLM_CKPT=checkpoints/streamSLM/<RUN_NAME>/step_00050000.pt \
-TEACHER_CKPT=/home/streamalign/streamASR/checkpoints/streamalign_r16/epoch_22.pt \
+TEACHER_CKPT=weights/Streamalign-R16/rvq_teacher/epoch_22.pt \
 WORLD=8 \
 bash streamSLM/scripts/run_eval_storycloze_parallel.sh
 ```
 
-Fans out to `WORLD` parallel `sr 1 24 --qos=q-low` shards, then merges
+Fans out to `WORLD` parallel `${LAUNCHER}` shards, then merges
 per-shard JSONs into `results/storycloze/<ckpt-tag>/<scoring_mode>/`.
 
 For SALMon: `bash streamSLM/scripts/run_eval_salmon.sh`.
@@ -243,8 +243,8 @@ launcher already sets it; one-off scripts must export it explicitly.
 ### Token accuracy / test loss
 
 ```
-sr 1 24 python -m streamSLM.eval.test_token_acc --slm_checkpoint ... --val_manifest ...
-sr 1 48 python -m streamSLM.eval.test_loss      --slm_checkpoint ... --val_manifest ...
+python -m streamSLM.eval.test_token_acc --slm_checkpoint ... --val_manifest ...
+python -m streamSLM.eval.test_loss      --slm_checkpoint ... --val_manifest ...
 ```
 
 ---

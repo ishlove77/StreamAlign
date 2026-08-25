@@ -25,7 +25,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 N_PROMPTS="${1:-5}"
 : "${WEIGHTS:=${REPO_ROOT}/weights}"
-: "${LIBRITTS:=/home/datasets/LibriTTS}"
+: "${LIBRITTS:=${LIBRITTS_ROOT:-/data/LibriTTS}}"
 : "${COSYVOICE_ROOT:=${REPO_ROOT}/streamASR/third_party/CosyVoice}"
 : "${OUT_DIR:=${REPO_ROOT}/outputs/continuation}"
 : "${PROMPT_DIR:=${REPO_ROOT}/outputs/continuation_prompts}"

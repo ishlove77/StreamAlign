@@ -23,7 +23,7 @@ STREAMASR="${REPO_ROOT}/streamASR"
 
 N_UTTS="${1:-10}"
 : "${WEIGHTS:=${REPO_ROOT}/weights}"
-: "${LIBRISPEECH:=/home/datasets/LibriSpeech}"
+: "${LIBRISPEECH:=${LIBRISPEECH_ROOT:-/data/LibriSpeech}}"
 : "${COSYVOICE_ROOT:=${STREAMASR}/third_party/CosyVoice}"
 : "${OUT_DIR:=${REPO_ROOT}/outputs/reconstruction}"
 : "${SPLIT:=test-clean}"

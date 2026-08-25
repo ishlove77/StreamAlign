@@ -13,11 +13,7 @@ class TokenizerConfig:
     rvq_num_quantizers: int = 16
     rvq_codebook_size: int = 512
     text_tokenizer: Literal["llama", "qwen3"] = "llama"
-    streamalign_ckpt: str = (
-        "/home/streamalign/streamASR/checkpoints/"
-        "streamalign_r16/"
-        "epoch_22.pt"
-    )
+    streamalign_ckpt: str = "weights/Streamalign-R16/rvq_teacher/epoch_22.pt"
 
     @property
     def codebook_size(self) -> int:
@@ -140,7 +136,8 @@ class ModelConfig:
 
 @dataclass
 class TrainConfig:
-    manifest: str = "streamSLM/configs/manifests/train_combined.csv"
+    # No default manifest ships with the repo; train.py takes --manifest.
+    manifest: Optional[str] = None
     cache_root: str = "cache/streamSLM_units"
     batch_size: int = 8
     grad_accum: int = 4
