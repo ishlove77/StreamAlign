@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-t=""; for a in "$@"; do case "$a" in *.py) t="$(basename $a)";; esac; done
-echo "    -> torchrun ${t} | RVQ_R=${RVQ_R} BYPASS=${RVQ_BYPASS:-?} LR=$(printf '%s\n' "$@" | grep -o 'learning_rate=.*' | head -1)"
