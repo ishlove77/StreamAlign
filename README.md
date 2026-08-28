@@ -42,7 +42,7 @@ training pipeline below.
 | [`streamASR/`](streamASR) | The tokenizer: streaming ASR, alignment, boundary classifier, RVQ quantizer, and CosyVoice-based resynthesis. |
 | [`streamSLM/`](streamSLM) | The speech LM: unit extraction, training, generation, and evaluation (SALMon, StoryCloze, continuation). |
 | [`examples/`](examples) | Runnable reconstruction and continuation demos against the released weights. |
-| [`docs/`](docs) | The demo page: side-by-side audio samples for reconstruction and continuation. |
+| [`docs/`](docs) | The demo page, published at [ishlove77.github.io/StreamAlign](https://ishlove77.github.io/StreamAlign/): side-by-side audio for reconstruction and continuation. |
 
 ## Pipeline overview
 

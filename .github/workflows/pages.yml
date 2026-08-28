@@ -1,8 +1,9 @@
 name: Deploy demo page
 
-# Publishes docs/ (the StreamAlign demo page) to GitHub Pages.
-# configure-pages with enablement:true turns Pages on the first time this runs,
-# so no manual repository-settings change is needed.
+# Publishes docs/ (the StreamAlign demo page) to GitHub Pages at
+# https://ishlove77.github.io/StreamAlign/
+# Pages source is set to "GitHub Actions"; enablement:true is kept as a
+# safeguard so a fresh fork deploys without touching repository settings.
 
 on:
   push:
