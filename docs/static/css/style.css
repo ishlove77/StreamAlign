@@ -211,11 +211,6 @@ body {
 
 /* ---------- Footer ---------- */
 
-.footer {
-  padding: 1.25rem 1.5rem;
-  background: #fafafa;
-  border-top: 1px solid #eee;
-}
 
 /* --- publication header: authors + resource links ------------------ */
 .publication-authors a {
