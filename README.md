@@ -205,7 +205,7 @@ This repository builds on [SpeechBrain](https://github.com/speechbrain/speechbra
 @inproceedings{kim2026streamalign,
   title     = {{StreamAlign: Streaming Text-Aligned Speech Tokenization}},
   author    = {Kim, Kang-wook and Park, Jinyoung and Kim, Jinsoo and
-               Lee, Sehun and Woo, Tony and Kim, Gunhee},
+               Lee, Sehun and Woo, Sang Hoon and Kim, Gunhee},
   booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2026},
   year      = {2026}
 }
