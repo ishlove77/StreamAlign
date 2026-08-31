@@ -4,12 +4,13 @@
 [Jinyoung Park](https://www.linkedin.com/in/jinyoung-park-3841b4384/)<sup>&ast;</sup>,
 [Jinsoo Kim](https://www.linkedin.com/in/%EC%A7%84%EC%88%98-%EA%B9%80-b769832a1/),
 [Sehun Lee](https://yhytoto12.github.io),
-[Tony Woo](https://tonywoo.me/),
+[Sang Hoon Woo](https://tonywoo.me/),
 [Gunhee Kim](https://vision.snu.ac.kr/gunhee/)
 
 <sup>&ast;</sup>Equal contribution
 
 [![Venue](https://img.shields.io/badge/EMNLP_2026-Findings-b31b1b.svg)](https://2026.emnlp.org/)
+[![Project Page](https://img.shields.io/badge/🎧-Project_Page-green.svg)](https://ishlove77.github.io/StreamAlign/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![R32](https://img.shields.io/badge/🤗-Streamalign--R32-yellow.svg)](https://huggingface.co/dd3434/Streamalign-R32)
 [![Tokenizer](https://img.shields.io/badge/🤗-Streamalign--R16-yellow.svg)](https://huggingface.co/dd3434/Streamalign-R16)
@@ -204,7 +205,7 @@ This repository builds on [SpeechBrain](https://github.com/speechbrain/speechbra
 @inproceedings{kim2026streamalign,
   title     = {{StreamAlign: Streaming Text-Aligned Speech Tokenization}},
   author    = {Kim, Kang-wook and Park, Jinyoung and Kim, Jinsoo and
-               Lee, Sehun and Woo, Tony and Kim, Gunhee},
+               Lee, Sehun and Woo, Sang Hoon and Kim, Gunhee},
   booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2026},
   year      = {2026}
 }
